@@ -16,10 +16,11 @@ public class Micro {
 			System.out.println("Not Accepted");
 		}
 	}
-	class CustomErrorStrategy extends DefaultErrorStrategy{
-		@Override
-		public void reportError(Parser recognizer, RecognitionException e){
-			throw e;
-		}	
-	}	
 }
+
+class CustomErrorStrategy extends DefaultErrorStrategy{
+	@Override
+	public void reportError(Parser recognizer, RecognitionException e){
+		throw e;
+	}	
+}	
