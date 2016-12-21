@@ -18,17 +18,17 @@ WHITESPACE: ('\t' | '\n' | ' ' | '\r')+ -> skip;
 OPERATOR: ':=' | '+' | '-' | '*' | '/' | '=' | '!=' | '<' | '>' | '(' | ')' | ';' | ',' | '<=' | '>=' ;
 
 //Program
-program: 'PROGRAM' id 'BEGIN' pgm_body 'END';
+program: 'PROGRAM' id 'BEGIN' pgm_body 'END' {SymbolTableStack.pop();SymbolTableStack.print();};
 id: IDENTIFIER;
-pgm_body: decl func_declarations;
+pgm_body: {SymbolTableStack.createScope("global");} decl func_declarations;
 decl: string_decl decl | var_decl decl | ;
 
 //Global String Declaration
-string_decl: 'STRING' id ':=' str ';';
+string_decl: 'STRING' id ':=' str ';' {SymbolTableStack.add($id.text, "STRING", $str.text);};
 str: STRINGLITERAL;
 
 //Variable Declaration
-var_decl: var_type id_list ';';
+var_decl: var_type id_list ';' {SymbolTableStack.add($id_list.text, $var_type.text);};
 var_type: 'FLOAT' | 'INT';
 any_type: var_type | 'VOID';
 id_list: id id_tail;
@@ -36,12 +36,12 @@ id_tail: ',' id id_tail | ;
 
 //Function Parameter List
 param_decl_list: param_decl param_decl_tail | ;
-param_decl: var_type id;
+param_decl: var_type id {SymbolTableStack.add($id_list.text, $var_type.text);};
 param_decl_tail: ',' param_decl param_decl_tail | ;
 
 //Function Declarations
 func_declarations: func_decl func_declarations | ;
-func_decl: 'FUNCTION' any_type id '(' param_decl_list ')' 'BEGIN' func_body 'END';
+func_decl: 'FUNCTION' any_type id {SymbolTableStack.createScope($id.text);} '(' param_decl_list ')' 'BEGIN' func_body 'END';
 func_body: decl stmt_list;
 
 //Statement List
@@ -70,9 +70,9 @@ addop: '+' | '-';
 mulop: '*' | '/';
 
 //Complex Statements and Condition
-if_stmt: 'IF' '(' cond ')' decl stmt_list else_part 'ENDIF';
-else_part: 'ELSIF' '(' cond ')' decl stmt_list else_part | ;
+if_stmt: 'IF' '(' cond ')' {SymbolTableStack.createScope("block");} decl stmt_list else_part 'ENDIF';
+else_part: 'ELSIF' '(' cond ')' {SymbolTableStack.createScope("block");} decl stmt_list else_part | ;
 cond: expr compop expr | 'TRUE' | 'FALSE';
 compop: '<' | '>' | '=' | '!=' | '<=' | '>=';
 
-do_while_stmt: 'DO' decl stmt_list 'WHILE' '(' cond ')' ';';
+do_while_stmt: 'DO' {SymbolTableStack.createScope("block");} decl stmt_list 'WHILE' '(' cond ')' ';';
