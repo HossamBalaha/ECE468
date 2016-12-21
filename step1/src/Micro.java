@@ -6,10 +6,8 @@ public class Micro {
 		CharStream chars = new ANTLRFileStream(args[0]);
 		MicroLexer scanner = new MicroLexer(chars);
 		Vocabulary vocabulary = scanner.getVocabulary();			
-		CommonTokenStream tokens = new CommonTokenStream((TokenSource)scanner);
-		tokens.fill();
-		for(Object o: tokens.getTokens()){
-			CommonToken token = (CommonToken)o;
+		
+		for(Token token: scanner.getAllTokens()){
 			System.out.println("Token Type: " + vocabulary.getDisplayName(token.getType()));
 			System.out.println("Value: " + token.getText());					
 		}		

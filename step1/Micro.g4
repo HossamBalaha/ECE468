@@ -13,7 +13,7 @@ STRINGLITERAL: '"'(~'"')*'"';
 
 COMMENT: '--' ~('\n' | '\r')+ -> skip;
 
-WHITESPACE: ('\t' | '\n' | ' ' | '\r')+ -> skip;
+WHITESPACE: ('\t' | '\n' | ' ' | '\r' )+ -> skip;
 
 OPERATOR: ':=' | '+' | '-' | '*' | '/' | '=' | '!=' | '<' | '>' | '(' | ')' | ';' | ',' | '<=' | '>=' ;
 
