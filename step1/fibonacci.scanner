@@ -1,0 +1,426 @@
+PROGRAM
+1
+Token Type: KEYWORD
+Value: PROGRAM
+fibonacci
+35
+Token Type: IDENTIFIER
+Value: fibonacci
+BEGIN
+2
+STRING
+4
+Token Type: FLOATLITERAL
+Value: STRING
+input
+35
+Token Type: IDENTIFIER
+Value: input
+:=
+5
+Token Type: STRINGLITERAL
+Value: :=
+lease
+35
+Token Type: IDENTIFIER
+Value: lease
+input
+35
+Token Type: IDENTIFIER
+Value: input
+an
+35
+Token Type: IDENTIFIER
+Value: an
+integer
+35
+Token Type: IDENTIFIER
+Value: integer
+number
+35
+Token Type: IDENTIFIER
+Value: number
+STRING
+4
+Token Type: FLOATLITERAL
+Value: STRING
+space
+35
+Token Type: IDENTIFIER
+Value: space
+:=
+5
+Token Type: STRINGLITERAL
+Value: :=
+STRING
+4
+Token Type: FLOATLITERAL
+Value: STRING
+eol
+35
+Token Type: IDENTIFIER
+Value: eol
+:=
+5
+Token Type: STRINGLITERAL
+Value: :=
+n
+35
+Token Type: IDENTIFIER
+Value: n
+FUNCTION
+11
+INT
+8
+F
+35
+Token Type: IDENTIFIER
+Value: F
+(
+12
+INT
+8
+n
+35
+Token Type: IDENTIFIER
+Value: n
+)
+13
+BEGIN
+2
+IF
+21
+(
+12
+n
+35
+Token Type: IDENTIFIER
+Value: n
+>
+27
+2
+36
+)
+13
+RETURN
+16
+F
+35
+Token Type: IDENTIFIER
+Value: F
+(
+12
+n
+35
+Token Type: IDENTIFIER
+Value: n
+-
+18
+1
+36
+)
+13
++
+17
+F
+35
+Token Type: IDENTIFIER
+Value: F
+(
+12
+n
+35
+Token Type: IDENTIFIER
+Value: n
+-
+18
+2
+36
+)
+13
+;
+6
+Token Type: COMMENT
+Value: ;
+ELSIF
+23
+(
+12
+n
+35
+Token Type: IDENTIFIER
+Value: n
+=
+28
+0
+36
+)
+13
+This
+35
+Token Type: IDENTIFIER
+Value: This
+is
+35
+Token Type: IDENTIFIER
+Value: is
+a
+35
+Token Type: IDENTIFIER
+Value: a
+comment
+35
+Token Type: IDENTIFIER
+Value: comment
+RETURN
+16
+0
+36
+;
+6
+Token Type: COMMENT
+Value: ;
+ELSIF
+23
+(
+12
+n
+35
+Token Type: IDENTIFIER
+Value: n
+=
+28
+1
+36
+)
+13
+RETURN
+16
+1
+36
+;
+6
+Token Type: COMMENT
+Value: ;
+ELSIF
+23
+(
+12
+n
+35
+Token Type: IDENTIFIER
+Value: n
+=
+28
+2
+36
+)
+13
+RETURN
+16
+1
+36
+;
+6
+Token Type: COMMENT
+Value: ;
+ENDIF
+22
+END
+3
+Token Type: INTLITERAL
+Value: END
+FUNCTION
+11
+VOID
+9
+main
+35
+Token Type: IDENTIFIER
+Value: main
+(
+12
+)
+13
+BEGIN
+2
+INT
+8
+i
+35
+Token Type: IDENTIFIER
+Value: i
+,
+10
+end
+35
+Token Type: IDENTIFIER
+Value: end
+,
+10
+result
+35
+Token Type: IDENTIFIER
+Value: result
+;
+6
+Token Type: COMMENT
+Value: ;
+WRITE
+15
+(
+12
+input
+35
+Token Type: IDENTIFIER
+Value: input
+)
+13
+;
+6
+Token Type: COMMENT
+Value: ;
+READ
+14
+(
+12
+end
+35
+Token Type: IDENTIFIER
+Value: end
+)
+13
+;
+6
+Token Type: COMMENT
+Value: ;
+i
+35
+Token Type: IDENTIFIER
+Value: i
+:=
+5
+Token Type: STRINGLITERAL
+Value: :=
+0
+36
+;
+6
+Token Type: COMMENT
+Value: ;
+DO
+32
+result
+35
+Token Type: IDENTIFIER
+Value: result
+:=
+5
+Token Type: STRINGLITERAL
+Value: :=
+F
+35
+Token Type: IDENTIFIER
+Value: F
+(
+12
+i
+35
+Token Type: IDENTIFIER
+Value: i
+)
+13
+;
+6
+Token Type: COMMENT
+Value: ;
+WRITE
+15
+(
+12
+i
+35
+Token Type: IDENTIFIER
+Value: i
+,
+10
+space
+35
+Token Type: IDENTIFIER
+Value: space
+)
+13
+;
+6
+Token Type: COMMENT
+Value: ;
+WRITE
+15
+(
+12
+result
+35
+Token Type: IDENTIFIER
+Value: result
+,
+10
+eol
+35
+Token Type: IDENTIFIER
+Value: eol
+)
+13
+;
+6
+Token Type: COMMENT
+Value: ;
+i
+35
+Token Type: IDENTIFIER
+Value: i
+:=
+5
+Token Type: STRINGLITERAL
+Value: :=
+i
+35
+Token Type: IDENTIFIER
+Value: i
++
+17
+1
+36
+;
+6
+Token Type: COMMENT
+Value: ;
+WHILE
+33
+(
+12
+i
+35
+Token Type: IDENTIFIER
+Value: i
+!=
+29
+end
+35
+Token Type: IDENTIFIER
+Value: end
+)
+13
+;
+6
+Token Type: COMMENT
+Value: ;
+END
+3
+Token Type: INTLITERAL
+Value: END
+END
+3
+Token Type: INTLITERAL
+Value: END
+<EOF>
+-1
