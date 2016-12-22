@@ -176,7 +176,31 @@ public class MicroIRListener extends MicroBaseListener{
 			PTProperty.put(ctx, node);
 		}
 	}
+
+	@Override public void exitWrite_stmt(MicroParser.Write_stmtContext ctx){
+		if (ctx.getChild(2) == null || ctx.getChild(2).getText().length() == 0) {
+			return;
+		} else {
+			String[] idList = ctx.getChild(2).getText().trim().split(",");
+			for (int i = 0; i < idList.length; i++) {
+				String type = checkType(idList[i]);
+				if(type.equals("INT")) {
+					IRNode irNode = new IRNode("WRITE", null, null, idList[i]);
+					IRList.add(irNode);
+				} else if (type.equals("FLOAT")) {
+					IRNode irNode = new IRNode("WRITE", null, null, idList[i]);
+					IRList.add(irNode);
+				} else {
+					System.out.println("Invalid type to write");
+				}
+			}
+		}
+	}
+
+
 }
+
+
 
 class Node {
 	private String opCode, value, type;
