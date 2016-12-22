@@ -24,10 +24,11 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 	private String checkType(String input) {
+
 		if (typeMap.get(input) == null) {
 			if(input.matches("[0-9]+")){
 				return "INT";
-			} else if(input.matches("[0-9]*'.'[0-9]+")){
+			} else if(input.matches("[0-9]*\\.[0-9]+")){
 				return "FLOAT";
 			}else{
 				return "STRING";
@@ -69,6 +70,7 @@ public class MicroIRListener extends MicroBaseListener{
 		if (expr == null) {
 			String primary = ctx.getChild(0).getText();
 			String type = checkType(primary);
+			
 			if(type.equals("FLOAT") || type.equals("INT")) {
 				String regName = getReg();
 				String opCode = (type.equals("INT")) ? "STOREI" : "STOREF";
@@ -76,15 +78,12 @@ public class MicroIRListener extends MicroBaseListener{
 				IRList.add(irNode);
 				Node node = new Node(null, regName, type);
 				PTProperty.put(ctx,node);
-				//System.out.println(opCode + " " + primary + " "+ regName + " " + type);
 			} else {
 				Node node = getNode(ctx.getChild(0));
 				PTProperty.put(ctx,node);
-				//System.out.println(primary + " " + type);
 			}
 		} else {
 			PTProperty.put(ctx, expr);
-			//System.out.println(ctx.getChild(1).getText());
 		}
 	}
 
@@ -179,7 +178,6 @@ public class MicroIRListener extends MicroBaseListener{
 
 
 	@Override public void exitAssign_expr(MicroParser.Assign_exprContext ctx){
-
 		String type = typeMap.get(ctx.getChild(0).getText());
 		Node expr = getNode(ctx.getChild(2));
 		String opName = "";
