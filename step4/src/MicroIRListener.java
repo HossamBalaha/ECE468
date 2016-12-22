@@ -26,6 +26,15 @@ public class MicroIRListener extends MicroBaseListener{
 	private String getReg(){
 		return "$T" + Integer.toString(registerCount++);
 	}
+	private String convertTinyReg(String input){
+		if (input == null) {
+			return null;
+		}
+		if (input.contains("$")) {
+			return "r" + Integer.toString(Integer.parseInt(input.substring(2))-1);
+		}
+		return input;
+	}
 
 	private Node getNode(ParseTree ctx) {
 
@@ -63,23 +72,6 @@ public class MicroIRListener extends MicroBaseListener{
 
 	}
 
-	private String getOp(String opCode) {
-		switch (opCode) {
-			case "ADDI": return "addi";
-			case "SUBI": return "subi";
-			case "ADDF": return "addr";
-			case "SUBF": return "subr";
-			case "MULTI": return "muli";
-			case "DIVI": return "divi";
-			case "MULTF": return "mulr";
-			case "DIVF": return "divr";
-			case "WRITEI": return "sys writei";
-			case "WRITEF": return "sys writer";
-		}
-
-		return "ERROR";
-	}
-
 	public void convertIRtoTiny(IRNode irNode) {
 		String opCode = irNode.getOpCode();
 		String operand1 = irNode.getOperand1();
@@ -111,6 +103,7 @@ public class MicroIRListener extends MicroBaseListener{
 				TNList.add(new TinyNode(getOp(opCode), operand2, temp));
 			}
 			regMap.put(result,temp);
+
 		}
 
 	}
@@ -285,6 +278,7 @@ public class MicroIRListener extends MicroBaseListener{
 	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
 		System.out.println(";IR code");
 		for (int i = 0; i < IRList.size(); i++) {
+			convertIRtoTiny(IRList.get(i));
 			IRList.get(i).printNode();
 			convertIRtoTiny(IRList.get(i));
 		}
@@ -293,6 +287,7 @@ public class MicroIRListener extends MicroBaseListener{
 		for (int i = 0; i < TNList.size(); i++) {
 			TNList.get(i).printNode();
 		}
+
 	}
 
 
