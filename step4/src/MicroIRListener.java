@@ -294,7 +294,6 @@ public class MicroIRListener extends MicroBaseListener{
 	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
 		System.out.println(";IR code");
 		for (int i = 0; i < IRList.size(); i++) {
-			convertIRtoTiny(IRList.get(i));
 			IRList.get(i).printNode();
 			convertIRtoTiny(IRList.get(i));
 		}
