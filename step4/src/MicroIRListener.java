@@ -102,7 +102,7 @@ public class MicroIRListener extends MicroBaseListener{
 			PTProperty.put(ctx, factor);
 		} else {
 			String regName = getReg();
-			String opCode = 
+			String opCode = matchOpCode(factor_prefix.getOpCode(), postfixType);
 			IRNode irNode = new IRNode(opCode, factor_prefix.getValue(), postfixText, regName);
 			IRList.add(irNode);
 			Node factor = new Node(null, regName, postfixType);
@@ -116,6 +116,19 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 		Node expr_prefix = getNode(ctx.getChild(0));
 		Node factor = getNode(ctx.getChild(1));
+
+		if(expr_prefix == null) {
+			Node expr_prefixNew = new Node(ctx.getChild(2).getText(), factor.getValue(), factor.getType());
+			PTProperty.put(ctx.expr_prefixNew);
+		} else {
+			String regName = getReg();
+			String opCode = matchOpCode(expr_prefix.getOpCode(), factor.getType());
+			IRNode irNode = new IRNode(opCode, expr_prefix.getValue(), factor.getValue(), regName);
+			IRList.add(irNode);
+			Node expr_prefixNew = new Node(ctx.getChild(2).getText(), regName, factor.getType());
+			PTProperty.put(ctx.expr_prefixNew);
+		}
+
 	}
 
 	@Override public void exitPostfix_expr(MicroParser.Postfix_exprContext ctx) {
