@@ -61,9 +61,6 @@ public class MicroIRListener extends MicroBaseListener{
 		PTProperty.put(ctx,node);
 		
 	}
-	@Override public void exitExpr(MicroParser.ExprContext ctx) {
-
-	}
 
 	@Override public void exitPrimary(MicroParser.PrimaryContext ctx){
 
@@ -159,7 +156,26 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 	}
 
-	
+	@Override public void exitExpr(MicroParser.ExprContext ctx){
+		Node expr_prefix = getNode(ctx.getChild(0));
+		Node factor = getNode(ctx.getChild(1));
+		String factorValue = factor.getValue();
+		String factorType = factor.getType();
+
+		if (expr_prefix != null) {
+			String regName = getReg();
+			String value = expr_prefix.getValue();
+			String addop = expr_prefix.getOpCode();
+			String opCode = matchOpCode(addop, factorType);
+			IRNode irNode = new IRNode(opCode, value, factorValue, regName);
+			IRList.add(irNode);
+			Node node = new Node(null, regName, factorType);
+			PTProperty.put(ctx, node);
+		} else {
+			Node node = new Node(null, factorValue, factorType);
+			PTProperty.put(ctx, node);
+		}
+	}
 }
 
 class Node {
