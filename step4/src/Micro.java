@@ -12,7 +12,7 @@ public class Micro {
 		try{
 			ParseTree parse = parser.program();
 			ParseTreeWalker walker = new ParseTreeWalker();
-			MicroListener listener = new MicroListener();
+			MicroIRListener listener = new MicroIRListener();
 			walker.walk(listener, parse);
 		}catch(Exception e){
 			System.out.println("Error from Micro");
