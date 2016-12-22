@@ -10,7 +10,10 @@ public class Micro {
 		ANTLRErrorStrategy es = new CustomErrorStrategy();
 		parser.setErrorHandler(es);
 		try{
-			parser.program();
+			ParseTree parse = parser.program();
+			ParseTreeWalker walker = new ParseTreeWalker();
+			MicroListener listener = new MicroListener();
+			walker.walk(listener, parse);
 		}catch(Exception e){
 			System.out.println("Error from Micro");
 		}
