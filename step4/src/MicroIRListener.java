@@ -37,6 +37,17 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 	}
 
+	private String matchOpCode(String opCode, String type) {
+		switch (opCode) {
+			case "+": return (type == "INT") ? "ADDI" : "ADDF";
+			case "-": return (type == "INT") ? "SUBI" : "SUBF";
+			case "*": return (type == "INT") ? "MULTI" : "MULTF";
+			case "/": return (type == "INT") ? "DIVI" : "DIVF";
+		}
+
+		return "OpCode not valid";
+
+	}
 	@Override public void exitVar_decl(MicroParser.Var_declContext ctx) {
 		String type = ctx.getChild(0).getText();
 		String[] idList = ctx.getChild(1).getText().trim().split(",");
@@ -99,13 +110,31 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 	}
 
-	@Override public void exitExpr_prefix(MicroParser.Expr_prefixContext ctx){
-		if(ctx.getText() == ""){
-			return;
-		}
-		Node expr_prefix = getNode(ctx.getChild(0));
-		Node factor = getNode(ctx.getChild(1));
+
+	@Override public void exitPostfix_expr(MicroParser.Postfix_exprContext ctx) {
+		PTProperty.put(ctx, getNode(ctx.getChild(0)));
 	}
+
+	@Override public void exitFactor_prefix(MicroParser.Factor_prefixContext ctx) {
+		if (ctx.getChild(0) == null) {
+			return;
+		} else {
+			Node factor_prefix = getNode(ctx.getChild(0));
+			Node postfix_expr = getNode(ctx.getChild(0));
+			String mulop = ctx.getChild(2).getText();
+
+			if(factor_prefix == null) {
+				Node node = new Node(mulop, postfix_expr.getValue(), postfix_expr.getType());
+				PTProperty.put(ctx, node);
+			} else {
+				String regName = getReg();
+				String value = factor_prefix.getValue();
+				String opCode = factor_prefix.getOpCode();
+
+			}
+		}
+	}
+
 	
 }
 
