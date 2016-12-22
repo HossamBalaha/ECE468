@@ -74,7 +74,7 @@ class SymbolTable {
 }
 
 public class SymbolTableStack {
-	private static Stack<SymbolTable> stack = new Stack<SymbolTable>();
+	public static Stack<SymbolTable> stack = new Stack<SymbolTable>();
 	private static int blockCount = 1;
 
 	public static void createScope(String inputName) {
@@ -92,17 +92,15 @@ public class SymbolTableStack {
 		SymbolTable currTable = stack.pop();
 		for (int i = 0; i < nameList.length; i++) {
 			Symbol sb = new Symbol(nameList[i], inputType, null);
-			currTable.getEntryMap().put(sb.getName(), sb);
+			currTable.addEntry(sb);
 		}
 		stack.push(currTable);
-		currTable.printSymbolTable();
 	}
 
 	public static void add(String inputName, String inputType, String inputValue) {
 		SymbolTable currTable = stack.pop();
 		Symbol sb = new Symbol(inputName, inputType, inputValue);
-		currTable.getEntryMap().put(sb.getName(), sb);
+		currTable.addEntry(sb);
 		stack.push(currTable);
-		currTable.printSymbolTable();
 	}
 }
