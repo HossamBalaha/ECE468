@@ -110,6 +110,13 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 	}
 
+	@Override public void exitExpr_prefix(MicroParser.Expr_prefixContext ctx){
+		if(ctx.getText() == ""){
+			return;
+		}
+		Node expr_prefix = getNode(ctx.getChild(0));
+		Node factor = getNode(ctx.getChild(1));
+	}
 
 	@Override public void exitPostfix_expr(MicroParser.Postfix_exprContext ctx) {
 		PTProperty.put(ctx, getNode(ctx.getChild(0)));
