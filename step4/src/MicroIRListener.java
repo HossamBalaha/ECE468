@@ -78,10 +78,34 @@ public class MicroIRListener extends MicroBaseListener{
 			PTProperty.put(ctx, expr);
 			//System.out.println(ctx.getChild(1).getText());
 		}
-
-
 	}
 
+	@Override public void exitFactor(MicroParser.FactorContext ctx){
+		Node factor_prefix = getNode(ctx.getChild(0));
+		Node postfix_expr = getNode(ctx.getChild(1));
+		String postfixText = postfix_expr.getValue();
+		String postfixType = postfix_expr.getType();
+
+		if(factor_prefix == null) {
+			Node factor = new Node(null, postfixText, postfixType);
+			PTProperty.put(ctx, factor);
+		} else {
+			String regName = getReg();
+			String opCode = 
+			IRNode irNode = new IRNode(opCode, factor_prefix.getValue(), postfixText, regName);
+			IRList.add(irNode);
+			Node factor = new Node(null, regName, postfixType);
+			PTProperty.put(ctx, factor);
+		}
+	}
+
+	@Override public void exitExpr_prefix(MicroParser.Expr_prefixContext ctx){
+		if(ctx.getText() == ""){
+			return;
+		}
+		Node expr_prefix = getNode(ctx.getChild(0));
+		Node factor = getNode(ctx.getChild(1));
+	}
 	
 }
 
