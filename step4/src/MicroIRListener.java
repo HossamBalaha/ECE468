@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.tree.*;
 
 public class MicroIRListener extends MicroBaseListener{
 	private ArrayList<IRNode> IRList = new ArrayList<IRNode>();
+	private ArrayList<TinyNode> TNList = new ArrayList<TinyNode>();
 	private ParseTreeProperty<Node> PTProperty =  new ParseTreeProperty<Node>();
 	private HashMap<String, String> typeMap = new HashMap<String, String>();
 	private int registerCount = 1;
@@ -63,12 +64,24 @@ public class MicroIRListener extends MicroBaseListener{
 			case "WRITEI": return "sys writei";
 			case "WRITEF": return "sys writer";
 		}
+
+		return "ERROR";
 	}
+
+	public void convertIRtoTiny(IRNode irNode) {
+		String opCode = irNode.getOpCode();
+		String operand1 = irNode.getOperand1();
+		String operand2 = irNode.getOperand2();
+
+
+	}
+
 
 	@Override public void exitVar_decl(MicroParser.Var_declContext ctx) {
 		String type = ctx.getChild(0).getText();
 		String[] idList = ctx.getChild(1).getText().trim().split(",");
 		for (int i = 0; i < idList.length; i++) {
+			TNList.add(new TinyNode("var", idList[i], null));
 			typeMap.put(idList[i], type);
 		}
 	}
@@ -234,6 +247,10 @@ public class MicroIRListener extends MicroBaseListener{
 		System.out.println(";IR code");
 		for (int i = 0; i < IRList.size(); i++) {
 			IRList.get(i).printNode();
+		}
+		System.out.println(";tiny code");
+		for (int i = 0; i < TNList.size(); i++) {
+			TNList.get(i).printNode();
 		}
 	}
 
