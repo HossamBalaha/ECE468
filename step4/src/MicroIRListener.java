@@ -14,6 +14,15 @@ public class MicroIRListener extends MicroBaseListener{
 	private String getReg(){
 		return "$T" + Integer.toString(registerCount++);
 	}
+	private String convertTinyReg(String input){
+		if (input == null) {
+			return null;
+		}
+		if (input.contains("$")) {
+			return "r" + Integer.toString(Integer.parseInt(input.substring(2))-1);
+		}
+		return input;
+	}
 
 	private Node getNode(ParseTree ctx) {
 
@@ -51,28 +60,46 @@ public class MicroIRListener extends MicroBaseListener{
 
 	}
 
-	private String getOp(String opCode) {
-		switch (opCode) {
-			case "ADDI": return "addi";
-			case "SUBI": return "subi";
-			case "ADDF": return "addr";
-			case "SUBF": return "subr";
-			case "MULTI": return "muli";
-			case "DIVI": return "divi";
-			case "MULTF": return "mulr";
-			case "DIVF": return "divr";
-			case "WRITEI": return "sys writei";
-			case "WRITEF": return "sys writer";
-		}
-
-		return "ERROR";
-	}
-
 	public void convertIRtoTiny(IRNode irNode) {
 		String opCode = irNode.getOpCode();
-		String operand1 = irNode.getOperand1();
-		String operand2 = irNode.getOperand2();
-
+		String operand1 = convertTinyReg(irNode.getOperand1());
+		String operand2 = convertTinyReg(irNode.getOperand2());
+		String result = convertTinyReg(irNode.getResult());
+		
+		switch(opCode) {
+			case "ADDI": TNList.add(new TinyNode("move", operand1, result));
+						 TNList.add(new TinyNode("addi", operand2, result));
+						 return;
+			case "ADDF": TNList.add(new TinyNode("move", operand1, result));
+						 TNList.add(new TinyNode("addr", operand2, result));
+						 return;
+			case "SUBI": TNList.add(new TinyNode("move", operand1, result));
+						 TNList.add(new TinyNode("subi", operand2, result));
+						 return;
+			case "SUBF": TNList.add(new TinyNode("move", operand1, result));
+						 TNList.add(new TinyNode("subr", operand2, result));
+						 return;
+			case "MULTI": TNList.add(new TinyNode("move", operand1, result));
+						 TNList.add(new TinyNode("multi", operand2, result));
+						 return;
+			case "MULTF": TNList.add(new TinyNode("move", operand1, result));
+						 TNList.add(new TinyNode("multr", operand2, result));
+						 return;
+			case "DIVI": TNList.add(new TinyNode("move", operand1, result));
+						 TNList.add(new TinyNode("divi", operand2, result));
+						 return;
+			case "DIVF": TNList.add(new TinyNode("move", operand1, result));
+						 TNList.add(new TinyNode("divr", operand2, result));
+						 return;			 
+			case "STOREI": TNList.add(new TinyNode("move", operand1, result));
+						 return;
+			case "STOREF": TNList.add(new TinyNode("move", operand1, result));
+						 return;
+			case "WRITEI": TNList.add(new TinyNode("sys writei", operand1, result));						 
+						 return;
+			case "WRITEF": TNList.add(new TinyNode("sys writer", operand1, result));
+						 return;
+		}
 
 	}
 
@@ -246,12 +273,15 @@ public class MicroIRListener extends MicroBaseListener{
 	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
 		System.out.println(";IR code");
 		for (int i = 0; i < IRList.size(); i++) {
+			convertIRtoTiny(IRList.get(i));
 			IRList.get(i).printNode();
 		}
+		TNList.add(new TinyNode("sys halt", null, null));
 		System.out.println(";tiny code");
 		for (int i = 0; i < TNList.size(); i++) {
 			TNList.get(i).printNode();
 		}
+
 	}
 
 
