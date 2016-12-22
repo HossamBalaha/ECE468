@@ -149,7 +149,11 @@ public class MicroIRListener extends MicroBaseListener{
 			} else {
 				String regName = getReg();
 				String value = factor_prefix.getValue();
-				String opCode = factor_prefix.getOpCode();
+				String opCode = matchOpCode(factor_prefix.getOpCode(), postfix_expr.getType());
+				IRNode irNode = new IRNode(opCode, value, postfix_expr.getValue(), regName);
+				IRList.add(irNode);
+				Node node = new Node(mulop, value, postfix_expr.getType());
+				PTProperty.put(ctx, node);
 
 			}
 		}
