@@ -119,14 +119,14 @@ public class MicroIRListener extends MicroBaseListener{
 
 		if(expr_prefix == null) {
 			Node expr_prefixNew = new Node(ctx.getChild(2).getText(), factor.getValue(), factor.getType());
-			PTProperty.put(ctx.expr_prefixNew);
+			PTProperty.put(ctx, expr_prefixNew);
 		} else {
 			String regName = getReg();
 			String opCode = matchOpCode(expr_prefix.getOpCode(), factor.getType());
 			IRNode irNode = new IRNode(opCode, expr_prefix.getValue(), factor.getValue(), regName);
 			IRList.add(irNode);
 			Node expr_prefixNew = new Node(ctx.getChild(2).getText(), regName, factor.getType());
-			PTProperty.put(ctx.expr_prefixNew);
+			PTProperty.put(ctx, expr_prefixNew);
 		}
 
 	}
