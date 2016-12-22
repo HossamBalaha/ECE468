@@ -176,6 +176,23 @@ public class MicroIRListener extends MicroBaseListener{
 			PTProperty.put(ctx, node);
 		}
 	}
+
+	@Override public void exitAssign_expr(MicroParser.Assign_exprContext ctx){
+		String type = typeMap.get(ctx.getChild(0).getText());
+		Node expr = getNode(ctx.getChild(2));
+		String opName = "";
+		if(type == null) {
+			return;
+		} else if(type.equals("INT")) {
+			opName = "STOREI";
+		} else if(type.equals("FLOAT")) {
+			opName = "FLOAT";
+		} else {
+			return;
+		}
+		IRNode irNode = new IRNode(opName,expr.getValue(), null, ctx.getChild(0).getText());
+		IRList.add(irNode);
+	}
 }
 
 class Node {
