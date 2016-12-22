@@ -215,6 +215,12 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 	}
 
+	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
+		for (int i = 0; i < IRList.size(); i++) {
+			IRList.get(i).printNode();
+		}
+	}
+
 
 }
 
