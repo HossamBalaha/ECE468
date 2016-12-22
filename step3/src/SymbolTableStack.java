@@ -63,9 +63,9 @@ class SymbolTable {
 		while(it.hasNext()) {
 			Symbol currSymbol = it.next();
 			if(currSymbol.getType() == "STRING") {
-				System.out.println("name " + currSymbol.getName + " type " + currSymbol.getType + " value " + currSymbol.getValue);
+				System.out.println("name " + currSymbol.getName() + " type " + currSymbol.getType() + " value " + currSymbol.getValue());
 			} else {
-				System.out.println("name " + currSymbol.getName + " type " + currSymbol.getType);
+				System.out.println("name " + currSymbol.getName() + " type " + currSymbol.getType());
 			}
 		}
 		System.out.println();
@@ -74,40 +74,35 @@ class SymbolTable {
 }
 
 public class SymbolTableStack {
-	private Stack<SymbolTable> stack;
-	private int blockCount;
+	private static Stack<SymbolTable> stack = new Stack<SymbolTable>();
+	private static int blockCount = 1;
 
-	public SymbolTableStack() {
-		this.stack = new Stack<SymbolTable>();
-		this.blockCount = 1;
-	}
-
-	public void createScope(String inputName) {
+	public static void createScope(String inputName) {
 		if (inputName.equals("global")) {
-			this.stack.push(new SymbolTable("GLOBAL"));
+			stack.push(new SymbolTable("GLOBAL"));
 		} else if (inputName.equals("block")){
-			stack.push(new SymbolTable("BLOCK " + this.blockCount++));
+			stack.push(new SymbolTable("BLOCK " + blockCount++));
 		} else {
 			stack.push(new SymbolTable(inputName));
 		}
 	}
 
-	public void add(String inputName, String inputType) {
+	public static void add(String inputName, String inputType) {
 		String[] nameList = inputName.trim().split(",");
-		SymbolTable currTable = this.stack.pop();
+		SymbolTable currTable = stack.pop();
 		for (int i = 0; i < nameList.length; i++) {
 			Symbol sb = new Symbol(nameList[i], inputType, null);
-			currTable.entryMap.put(sb.getName(), sb);
+			currTable.getEntryMap().put(sb.getName(), sb);
 		}
-		this.stack.push(currTable);
+		stack.push(currTable);
 		currTable.printSymbolTable();
 	}
 
-	public void add(String inputName, String inputType, String inputValue) {
-		SymbolTable currTable = this.stack.pop();
+	public static void add(String inputName, String inputType, String inputValue) {
+		SymbolTable currTable = stack.pop();
 		Symbol sb = new Symbol(inputName, inputType, inputValue);
-		currTable.entryMap.put(sb.getName(), sb);
-		this.stack.push(currTable);
+		currTable.getEntryMap().put(sb.getName(), sb);
+		stack.push(currTable);
 		currTable.printSymbolTable();
 	}
 }

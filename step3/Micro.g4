@@ -36,7 +36,7 @@ id_tail: ',' id id_tail | ;
 
 //Function Parameter List
 param_decl_list: param_decl param_decl_tail | ;
-param_decl: var_type id {SymbolTableStack.add($id_list.text, $var_type.text);};
+param_decl: var_type id {SymbolTableStack.add($id.text, $var_type.text);};
 param_decl_tail: ',' param_decl param_decl_tail | ;
 
 //Function Declarations
