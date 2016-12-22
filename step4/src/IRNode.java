@@ -28,7 +28,7 @@ public class IRNode {
 	public void printNode() {
 		String operand1 = (this.operand1 == null) ? "" : " " + this.operand1;
 		String operand2 = (this.operand2 == null) ? "" : " " + this.operand2;
-		String opCode = (this.opCode == null) ? "" : " " + this.opCode;
+		String opCode = (this.opCode == null) ? "" : this.opCode;
 		String result = (this.result == null) ? "" : " " + this.result;
 
 		System.out.println(";" + opCode + operand1 + operand2 + result);

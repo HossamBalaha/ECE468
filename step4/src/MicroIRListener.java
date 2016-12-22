@@ -33,16 +33,16 @@ public class MicroIRListener extends MicroBaseListener{
 				return "STRING";
 			}
 		}else{
-			return typeMap.get(input);
+			return "ID";
 		}
 	}
 
 	private String matchOpCode(String opCode, String type) {
 		switch (opCode) {
-			case "+": return (type == "INT") ? "ADDI" : "ADDF";
-			case "-": return (type == "INT") ? "SUBI" : "SUBF";
-			case "*": return (type == "INT") ? "MULTI" : "MULTF";
-			case "/": return (type == "INT") ? "DIVI" : "DIVF";
+			case "+": return (type.equals("INT")) ? "ADDI" : "ADDF";
+			case "-": return (type.equals("INT")) ? "SUBI" : "SUBF";
+			case "*": return (type.equals("INT")) ? "MULTI" : "MULTF";
+			case "/": return (type.equals("INT")) ? "DIVI" : "DIVF";
 		}
 
 		return "OpCode not valid";
@@ -133,13 +133,13 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 	@Override public void exitFactor_prefix(MicroParser.Factor_prefixContext ctx) {
-		if (ctx.getChild(0) == null) {
+
+		if (ctx.getText() == "") {
 			return;
 		} else {
 			Node factor_prefix = getNode(ctx.getChild(0));
-			Node postfix_expr = getNode(ctx.getChild(0));
+			Node postfix_expr = getNode(ctx.getChild(1));
 			String mulop = ctx.getChild(2).getText();
-
 			if(factor_prefix == null) {
 				Node node = new Node(mulop, postfix_expr.getValue(), postfix_expr.getType());
 				PTProperty.put(ctx, node);
@@ -179,6 +179,7 @@ public class MicroIRListener extends MicroBaseListener{
 
 
 	@Override public void exitAssign_expr(MicroParser.Assign_exprContext ctx){
+
 		String type = typeMap.get(ctx.getChild(0).getText());
 		Node expr = getNode(ctx.getChild(2));
 		String opName = "";
@@ -187,7 +188,7 @@ public class MicroIRListener extends MicroBaseListener{
 		} else if(type.equals("INT")) {
 			opName = "STOREI";
 		} else if(type.equals("FLOAT")) {
-			opName = "FLOAT";
+			opName = "STOREF";
 		} else {
 			return;
 		}
@@ -201,12 +202,12 @@ public class MicroIRListener extends MicroBaseListener{
 		} else {
 			String[] idList = ctx.getChild(2).getText().trim().split(",");
 			for (int i = 0; i < idList.length; i++) {
-				String type = checkType(idList[i]);
+				String type = typeMap.get(idList[i]);
 				if(type.equals("INT")) {
-					IRNode irNode = new IRNode("WRITE", null, null, idList[i]);
+					IRNode irNode = new IRNode("WRITEI", null, null, idList[i]);
 					IRList.add(irNode);
 				} else if (type.equals("FLOAT")) {
-					IRNode irNode = new IRNode("WRITE", null, null, idList[i]);
+					IRNode irNode = new IRNode("WRITEF", null, null, idList[i]);
 					IRList.add(irNode);
 				} else {
 					System.out.println("Invalid type to write");
@@ -216,6 +217,7 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
+		System.out.println(";IR code");
 		for (int i = 0; i < IRList.size(); i++) {
 			IRList.get(i).printNode();
 		}
