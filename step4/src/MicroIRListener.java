@@ -72,6 +72,21 @@ public class MicroIRListener extends MicroBaseListener{
 
 	}
 
+	private String getOp(String opCode) {
+		switch (opCode) {
+			case "ADDI": return "addi";
+			case "SUBI": return "subi";
+			case "ADDF": return "addr";
+			case "SUBF": return "subr";
+			case "MULTI": return "muli";
+			case "DIVI": return "divi";
+			case "MULTF": return "mulr";
+			case "DIVF": return "divr";
+			case "WRITEI": return "sys writei";
+			case "WRITEF": return "sys writer";
+		}
+	}
+
 	public void convertIRtoTiny(IRNode irNode) {
 		String opCode = irNode.getOpCode();
 		String operand1 = irNode.getOperand1();
