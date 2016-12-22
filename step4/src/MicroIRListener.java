@@ -9,7 +9,19 @@ public class MicroIRListener extends MicroBaseListener{
 	private ArrayList<TinyNode> TNList = new ArrayList<TinyNode>();
 	private ParseTreeProperty<Node> PTProperty =  new ParseTreeProperty<Node>();
 	private HashMap<String, String> typeMap = new HashMap<String, String>();
+	private HashMap<String, String> regMap = new HashMap<String, String>();
 	private int registerCount = 1;
+	private int tinyCount = 0;
+
+	private String getTinyReg(String str) {
+		if(str.contains("$") && regMap.containsKey(str)) {
+			return regMap.get(str);
+		} else {
+			String s = "r" + tinyCount++;
+			regMap.put(str, s);
+			return s;
+		}
+	}
 
 	private String getReg(){
 		return "$T" + Integer.toString(registerCount++);
@@ -72,7 +84,34 @@ public class MicroIRListener extends MicroBaseListener{
 		String opCode = irNode.getOpCode();
 		String operand1 = irNode.getOperand1();
 		String operand2 = irNode.getOperand2();
-
+		String result = irNode.getResult();
+		String temp;
+		if(opCode.equals("STOREI") || opCode.equals("STOREF")) {
+			if(operand1.contains("$")) {
+				TNList.add(new TinyNode("move", getTinyReg(operand1), result));
+			} else {
+				TNList.add(new TinyNode("move", operand1, getTinyReg(result)));
+			}
+		} else if(opCode.equals("WRITEI") || opCode.equals("WRITEF")) {
+			TNList.add(new TinyNode(getOp(opCode), null, result));
+		} else {
+			if (operand1.contains("$") && operand2.contains("$")) {
+				temp = getTinyReg(operand1);
+				TNList.add(new TinyNode(getOp(opCode), getTinyReg(operand2), temp));
+			} else if (operand1.contains("$")) {
+				temp = getTinyReg(operand1);
+				TNList.add(new TinyNode(getOp(opCode), operand2, temp));
+			} else if (operand2.contains("$")) {
+				temp = getTinyReg(operand1);
+				TNList.add(new TinyNode("move", operand1, temp));
+				TNList.add(new TinyNode(getOp(opCode), getTinyReg(operand2), temp));
+			} else {
+				temp = getTinyReg(operand1);
+				TNList.add(new TinyNode("move", operand1, temp));
+				TNList.add(new TinyNode(getOp(opCode), operand2, temp));
+			}
+			regMap.put(result,temp);
+		}
 
 	}
 
@@ -247,7 +286,9 @@ public class MicroIRListener extends MicroBaseListener{
 		System.out.println(";IR code");
 		for (int i = 0; i < IRList.size(); i++) {
 			IRList.get(i).printNode();
+			convertIRtoTiny(IRList.get(i));
 		}
+		TNList.add(new TinyNode("sys halt", null, null));
 		System.out.println(";tiny code");
 		for (int i = 0; i < TNList.size(); i++) {
 			TNList.get(i).printNode();
