@@ -85,6 +85,7 @@ public class MicroIRListener extends MicroBaseListener{
 			case "WRITEI": return "sys writei";
 			case "WRITEF": return "sys writer";
 		}
+		return opCode;
 	}
 
 	public void convertIRtoTiny(IRNode irNode) {
