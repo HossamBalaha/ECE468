@@ -17,6 +17,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private int registerCount = 1;
 	private int tinyCount = 0;
 	private int labelNum = 1;
+	private int localNum = 0;
 
 	private void addopList() {
 		opList.add("ADDI");
@@ -64,6 +65,10 @@ public class MicroIRListener extends MicroBaseListener{
 
 	private String getLabel() {
 		return "label" + (Integer.toString(labelNum++));
+	}
+
+	private String getLocalNum() {
+		return (Integer.toString(labelNum));
 	}
 
 	private String checkType(String input) {
@@ -116,6 +121,8 @@ public class MicroIRListener extends MicroBaseListener{
 			case "LE": return "jle";
 			case "JUMP": return "jmp";
 			case "LABEL": return "label";
+			case "LINK": return "link";
+			case "WRITES": return "writes";
 		}
 		return opCode;
 	}
@@ -145,6 +152,8 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 		} else if(opCode.equals("WRITEI") || opCode.equals("WRITEF")) {
 			TNList.add(new TinyNode(getOp(opCode), null, result));
+		} else if(opCode.equals("LINK")) {
+			TNList.add(new TinyNode(getOp(opCode), null, getLocalNum()));
 		} else if(opCode.equals("READI") || opCode.equals("READF")){
 			TNList.add(new TinyNode("sys", getOp(opCode), result));
 		} else if(opList.contains(opCode)){
