@@ -12,6 +12,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private HashMap<String, String> typeMap = new HashMap<String, String>();
 	private HashMap<String, String> regMap = new HashMap<String, String>();
 	private ArrayList<String> opList = new ArrayList<String>();
+	private Stack<LabelNode> labelStack = new Stack<LabelNode>();
 	private int registerCount = 1;
 	private int tinyCount = 0;
 	private int labelNum = 1;
@@ -156,16 +157,10 @@ public class MicroIRListener extends MicroBaseListener{
 			//case op2 is constant
 			temp = getTinyReg(operand2);
 			if (!operand2.contains("$")) {
-				TNList.add(new TinyNode("move", operand2, temp));
+				TNList.add(new TinyNode("move", operand2, getTinyReg(operand2)));
 			}
-			// cmp type
-			if (checkType(operand1).equals("INT")) {
-				TNList.add(new TinyNode("cmpi", op1, temp));
-			} else if(checkType(operand1).equals("INT")) {
-				TNList.add(new TinyNode("cmpr", op1, temp));
-			}
-			TNList.add(new TinyNode(getOp(opCode), null, result));
 		}
+
 	}
 
 //Generate IR Node
