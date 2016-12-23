@@ -11,6 +11,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private ParseTreeProperty<Node> PTProperty =  new ParseTreeProperty<Node>();
 	private HashMap<String, String> typeMap = new HashMap<String, String>();
 	private HashMap<String, String> regMap = new HashMap<String, String>();
+	private HashMap<String, String> tinyMap = new HashMap<String, String>();
 	private ArrayList<String> opList = new ArrayList<String>();
 	private Stack<LabelNode> labelStack = new Stack<LabelNode>();
 	private int registerCount = 1;
@@ -132,6 +133,11 @@ public class MicroIRListener extends MicroBaseListener{
 			} else {
 				TNList.add(new TinyNode("move", operand1, getTinyReg(result)));
 			}
+			if(opCode.equals("STOREI")){
+				tinyMap.put(result,"INT");
+			} else {
+				tinyMap.put(result,"FLOAT");
+			}
 		} else if(opCode.equals("WRITEI") || opCode.equals("WRITEF")) {
 			TNList.add(new TinyNode(getOp(opCode), null, result));
 		} else if(opList.contains(opCode)){
@@ -159,6 +165,13 @@ public class MicroIRListener extends MicroBaseListener{
 			if (!operand2.contains("$")) {
 				TNList.add(new TinyNode("move", operand2, getTinyReg(operand2)));
 			}
+			// cmp type
+			if (tinyMap.get(operand2).equals("INT")) {
+				TNList.add(new TinyNode("cmpi", operand1, temp));
+			} else if(tinyMap.get(operand2).equals("FLOAT")) {
+				TNList.add(new TinyNode("cmpr", operand1, temp));
+			}
+			TNList.add(new TinyNode(getOp(opCode), null, result));
 		}
 
 	}
