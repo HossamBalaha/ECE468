@@ -150,13 +150,16 @@ public class MicroIRListener extends MicroBaseListener{
 			} else if (opCode.equals("STOREF") && result.contains("$")){
 				tinyMap.put(result,"FLOAT");
 			}
-		} else if(opCode.equals("WRITEI") || opCode.equals("WRITEF")) {
+		} else if(opCode.equals("WRITEI") || opCode.equals("WRITEF") || opCode.equals("WRITES") || opCode.equals("READI") || opCode.equals("READF")) {
+			if(opCode.contains("$")) {
+				TNList.add(new TinyNode("sys", getOp(opCode), getTinyReg(result)));
+			} else {
+				TNList.add(new TinyNode("sys", getOp(opCode), result));
+			}
 			TNList.add(new TinyNode(getOp(opCode), null, result));
 		} else if(opCode.equals("LINK")) {
 			TNList.add(new TinyNode(getOp(opCode), null, getLocalNum()));
-		} else if(opCode.equals("READI") || opCode.equals("READF")){
-			TNList.add(new TinyNode("sys", getOp(opCode), result));
-		} else if(opList.contains(opCode)){
+		}  else if(opList.contains(opCode)){
 			if (operand1.contains("$") && operand2.contains("$")) {
 				temp = getTinyReg(operand1);
 				TNList.add(new TinyNode(getOp(opCode), getTinyReg(operand2), temp));
