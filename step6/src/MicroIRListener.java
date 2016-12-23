@@ -19,6 +19,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private int labelNum = 1;
 	private int localNum = 0;
 	private int paraNum = 0;
+	private int pushflag = 0;
 
 	private void addopList() {
 		opList.add("ADDI");
@@ -138,6 +139,8 @@ public class MicroIRListener extends MicroBaseListener{
 			case "LABEL": return "label";
 			case "LINK": return "link";
 			case "WRITES": return "writes";
+			case "PUSH": return "push";
+			case "POP": return "pop";
 		}
 		return opCode;
 	}
@@ -174,6 +177,30 @@ public class MicroIRListener extends MicroBaseListener{
 			TNList.add(new TinyNode(getOp(opCode), null, result));
 		} else if(opCode.equals("LINK")) {
 			TNList.add(new TinyNode(getOp(opCode), null, getLocalNum()));
+		} else if(opCode.equals("PUSH")){
+			if(!result.contains("$")){
+				TNList.add(new TinyNode(getOp(opCode), null, null));
+				pushflag = 1;
+			} else {
+				TNList.add(new TinyNode(getOp(opCode), null, getTinyReg(result)));
+			}
+		} else if(opCode.equals("POP")) {
+			if(result.contains("$")){
+				TNList.add(new TinyNode(getOp(opCode), null, getTinyReg(result)));
+			} else {
+				pushflag = 0;
+				TNList.add(new TinyNode(getOp(opCode), null, null));
+			}
+		} else if(opCode.equals("JSR")) {
+			TNList.add(new TinyNode("push", null, "r0"));
+			TNList.add(new TinyNode("push", null, "r1"));
+			TNList.add(new TinyNode("push", null, "r2"));
+			TNList.add(new TinyNode("push", null, "r3"));
+			TNList.add(new TinyNode("jsr", null, "r"));
+			TNList.add(new TinyNode("pop", null, "r3"));
+			TNList.add(new TinyNode("pop", null, "r2"));
+			TNList.add(new TinyNode("pop", null, "r1"));
+			TNList.add(new TinyNode("pop", null, "r0"));
 		} else if(opList.contains(opCode)){
 			if (operand1.contains("$") && operand2.contains("$")) {
 				temp = getTinyReg(operand1);
