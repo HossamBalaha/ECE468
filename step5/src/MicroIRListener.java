@@ -154,7 +154,7 @@ public class MicroIRListener extends MicroBaseListener{
 			TNList.add(new TinyNode(getOp(opCode), null, result));
 		} else {
 			//case op2 is constant
-			String temp = getTinyReg(operand2);
+			temp = getTinyReg(operand2);
 			if (!operand2.contains("$")) {
 				TNList.add(new TinyNode("move", operand2, temp));
 			}
