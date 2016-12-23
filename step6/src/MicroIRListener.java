@@ -201,6 +201,9 @@ public class MicroIRListener extends MicroBaseListener{
 			TNList.add(new TinyNode("pop", null, "r2"));
 			TNList.add(new TinyNode("pop", null, "r1"));
 			TNList.add(new TinyNode("pop", null, "r0"));
+		} else if(opCode.equals("RET")) {
+			TNList.add(new TinyNode("unlnk", null, null));
+			TNList.add(new TinyNode("ret", null, null));
 		} else if(opList.contains(opCode)){
 			if (operand1.contains("$") && operand2.contains("$")) {
 				temp = getTinyReg(operand1);
