@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 import java.util.HashMap;
 import org.antlr.v4.runtime.*;
@@ -367,6 +368,18 @@ public class MicroIRListener extends MicroBaseListener{
 
 	}
 
+	//if statement
+	@Override public void enterIf_stmt(MicroParser.If_stmtContext ctx) {
+		String headLabel = getLabel();
+		String outLabel = getLabel();
+		labelStack.push(new LabelNode("if", headLabel, outLabel));
+	}
+	@Override public void exitIf_stmt(MicroParser.If_stmtContext ctx) {
+		while(labelStack.peek().getName() != "if") {
+			labelStack.pop();
+		}
+		IRList.add(new IRNode("LABEL", null, null, labelStack.pop().getOutLabel()));
+	}
 //END Generate IR Node
 }
 
@@ -391,5 +404,24 @@ class Node {
 
 	public String getType() {
 		return this.type;
+	}
+}
+
+class LabelNode {
+	private String name, headLabel, outLabel;
+	public LabelNode(String name, String headLabel, String outLabel) {
+		this.name = name;
+		this.headLabel = headLabel;
+		this.outLabel = outLabel;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+	public String getHeadLabel() {
+		return this.headLabel;
+	}
+	public String getOutLabel() {
+		return this.outLabel;
 	}
 }
