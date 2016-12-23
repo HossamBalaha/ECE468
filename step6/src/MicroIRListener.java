@@ -221,6 +221,21 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 //Generate IR Node
+	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
+		System.out.println(";IR code");
+		for (int i = 0; i < IRList.size(); i++) {
+			IRList.get(i).printNode();
+			convertIRtoTiny(IRList.get(i));
+		}
+		TNList.add(new TinyNode("sys halt", null, null));
+		System.out.println(";tiny code");
+		for (int i = 0; i < TNList.size(); i++) {
+			TNList.get(i).printNode();
+		}
+		
+
+	}
+
 	@Override public void exitVar_decl(MicroParser.Var_declContext ctx) {
 		String type = ctx.getChild(0).getText();
 		String[] idList = ctx.getChild(1).getText().trim().split(",");
@@ -229,6 +244,14 @@ public class MicroIRListener extends MicroBaseListener{
 			typeMap.put(idList[i], type);
 		}
 	}
+
+	@Override public void exitString_decl(MicroParser.String_declContext ctx) {
+		String name = ctx.getChild(1).getText();
+		String value = ctx.getChild(3).getText();
+		typeMap.put(name, "STRING");
+		TNList.add(new TinyNode("str", name, value));
+	}
+
 
 	@Override public void exitId(MicroParser.IdContext ctx) {
 		Node node = new Node(null, ctx.getText(),typeMap.get(ctx.getText()));
@@ -406,19 +429,6 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 	}
 
-	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
-		System.out.println(";IR code");
-		for (int i = 0; i < IRList.size(); i++) {
-			IRList.get(i).printNode();
-			convertIRtoTiny(IRList.get(i));
-		}
-		TNList.add(new TinyNode("sys halt", null, null));
-		System.out.println(";tiny code");
-		for (int i = 0; i < TNList.size(); i++) {
-			TNList.get(i).printNode();
-		}
-
-	}
 	@Override public void enterDo_while_stmt(MicroParser.Do_while_stmtContext ctx) {
 		String headLabel = getLabel();
 		String outLabel = getLabel();
