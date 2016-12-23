@@ -153,11 +153,18 @@ public class MicroIRListener extends MicroBaseListener{
 			TNList.add(new TinyNode(getOp(opCode), null, result));
 		} else {
 			//case op2 is constant
+			String temp = getTinyReg(operand2);
 			if (!operand2.contains("$")) {
-				TNList.add(new TinyNode("move", operand2, getTinyReg(operand2)));
+				TNList.add(new TinyNode("move", operand2, temp));
 			}
+			// cmp type
+			if (checkType(operand1).equals("INT")) {
+				TNList.add(new TinyNode("cmpi", op1, temp));
+			} else if(checkType(operand1).equals("INT")) {
+				TNList.add(new TinyNode("cmpr", op1, temp));
+			}
+			TNList.add(new TinyNode(getOp(opCode), null, result));
 		}
-
 	}
 
 //Generate IR Node
