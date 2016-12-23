@@ -362,6 +362,19 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 
 	}
+	@Override public void enterDo_while_stmt(MicroParser.Do_while_stmtContext ctx) {
+		String headLabel = getLabel();
+		String outLabel = getLabel();
+		labelStack.push(new LabelNode("do_while", outLabel, headLabel));
+		IRList.add(new IRNode("LABEL", null, null, headLabel));
+	}
+
+	@Override public void exitDo_while_stmt(MicroParser.Do_while_stmtContext ctx) {
+		String outLabel = labelStack.peek().getOutLabel();
+		String headLabel = labelStack.pop().getHeadLabel();
+		IRList.add(new IRNode("JUMP", null, null, outLabel));
+		IRList.add(new IRNode("LABEL", null, null, headLabel));
+	}
 
 	//if statement
 	@Override public void enterIf_stmt(MicroParser.If_stmtContext ctx) {
@@ -375,6 +388,7 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 		IRList.add(new IRNode("LABEL", null, null, labelStack.pop().getOutLabel()));
 	}
+	//else if statement
 	@Override public void enterElse_part(MicroParser.Else_partContext ctx) {
 		String headLabel = labelStack.peek().getHeadLabel();
 		String outLabel = labelStack.peek().getOutLabel();
@@ -384,6 +398,7 @@ public class MicroIRListener extends MicroBaseListener{
 			labelStack.push(new LabelNode("else_if", getLabel(), outLabel));
 		}
 	}
+	//condition block
 	@Override public void exitCond(MicroParser.CondContext ctx) {
 		String headLabel = labelStack.peek().getHeadLabel();
 		//True or False
@@ -414,13 +429,15 @@ public class MicroIRListener extends MicroBaseListener{
 			}else if (compop.equals("!=")) {
 				IRList.add(new IRNode("EQ", expr1.getValue(), expr2.getValue(), headLabel));
 			}else if (compop.equals("<=")) {
-				IRList.add(new IRNode("GE", expr1.getValue(), expr2.getValue(), headLabel));
+				IRList.add(new IRNode("GT", expr1.getValue(), expr2.getValue(), headLabel));
 			}else if (compop.equals(">=")) {
 				IRList.add(new IRNode("LT", expr1.getValue(), expr2.getValue(), headLabel));
 			}
 		}
 
 	}
+
+
 //END Generate IR Node
 }
 
