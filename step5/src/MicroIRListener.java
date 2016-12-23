@@ -111,6 +111,8 @@ public class MicroIRListener extends MicroBaseListener{
 			case "GE": return "jge";
 			case "LT": return "jlt";
 			case "LE": return "jle";
+			case "JUMP": return "jmp";
+			case "LABEL": return "label";
 		}
 		return opCode;
 	}
