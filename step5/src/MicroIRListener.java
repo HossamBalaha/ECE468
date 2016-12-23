@@ -375,6 +375,52 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 		IRList.add(new IRNode("LABEL", null, null, labelStack.pop().getOutLabel()));
 	}
+	@Override public void enterElse_part(MicroParser.Else_partContext ctx) {
+		String headLabel = labelStack.peek().getHeadLabel();
+		String outLabel = labelStack.peek().getOutLabel();
+		IRList.add(new IRNode("JUMP", null, null, outLabel));
+		IRList.add(new IRNode("LABEL", null, null, headLabel));
+		if (ctx.getChildCount() > 1) {
+			labelStack.push(new LabelNode("else_if", getLabel(), outLabel));
+		}
+	}
+	@Override public void exitCond(MicroParser.CondContext ctx) {
+		String headLabel = labelStack.peek().getHeadLabel();
+		//True or False
+		if (ctx.getChildCount() == 1) {
+			String regName1 = getReg();
+			String regName2 = getReg();
+			IRList.add(new IRNode("STOREI", "1", null, regName1));
+			IRList.add(new IRNode("STOREI", "1", null, regName2));
+			String trueFalse = ctx.getChild(0).getText();
+			if (trueFalse.equals("TRUE")) {
+				IRList.add(new IRNode("NE", regName1, regName2, headLabel));
+			} else if (trueFalse.equals("FALSE")){
+				IRList.add(new IRNode("EQ", regName1, regName2, headLabel));
+			}
+
+			return;
+		} else {
+			Node expr1 = getNode(ctx.getChild(0));
+			Node expr2 = getNode(ctx.getChild(2));
+			String compop = ctx.getChild(1).getText();
+
+			if (compop.equals("<")) {
+				IRList.add(new IRNode("GE", expr1.getValue(), expr2.getValue(), headLabel));
+			}else if (compop.equals(">")) {
+				IRList.add(new IRNode("LE", expr1.getValue(), expr2.getValue(), headLabel));
+			}else if (compop.equals("=")) {
+				IRList.add(new IRNode("NE", expr1.getValue(), expr2.getValue(), headLabel));
+			}else if (compop.equals("!=")) {
+				IRList.add(new IRNode("EQ", expr1.getValue(), expr2.getValue(), headLabel));
+			}else if (compop.equals("<=")) {
+				IRList.add(new IRNode("GE", expr1.getValue(), expr2.getValue(), headLabel));
+			}else if (compop.equals(">=")) {
+				IRList.add(new IRNode("LT", expr1.getValue(), expr2.getValue(), headLabel));
+			}
+		}
+
+	}
 //END Generate IR Node
 }
 
