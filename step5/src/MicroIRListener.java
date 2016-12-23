@@ -13,6 +13,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private ArrayList<String> opList = new ArrayList<String>();
 	private int registerCount = 1;
 	private int tinyCount = 0;
+	private int labelNum = 1;
 
 	private void addopList() {
 		opList.add("ADDI");
@@ -58,6 +59,10 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 	}
 
+	private String getLabel() {
+		return "label" + (Integer.toString(labelNum++));
+	}
+
 	private String checkType(String input) {
 
 		if (typeMap.get(input) == null) {
@@ -73,6 +78,7 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 	}
 
+	//Macth operators with opCodes
 	private String matchOpCode(String opCode, String type) {
 		switch (opCode) {
 			case "+": return (type.equals("INT")) ? "ADDI" : "ADDF";
@@ -84,7 +90,7 @@ public class MicroIRListener extends MicroBaseListener{
 		return "OpCode not valid";
 
 	}
-
+	//Convert IR opCode to Tiny opCode
 	private String getOp(String opCode) {
 		switch (opCode) {
 			case "ADDI": return "addi";
@@ -152,7 +158,7 @@ public class MicroIRListener extends MicroBaseListener{
 
 	}
 
-
+//Generate IR Node
 	@Override public void exitVar_decl(MicroParser.Var_declContext ctx) {
 		String type = ctx.getChild(0).getText();
 		String[] idList = ctx.getChild(1).getText().trim().split(",");
@@ -318,6 +324,25 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 		}
 	}
+	@Override public void exitRead_stmt(MicroParser.Read_stmtContext ctx){
+		if (ctx.getChild(2) == null || ctx.getChild(2).getText().length() == 0) {
+			return;
+		} else {
+			String[] idList = ctx.getChild(2).getText().trim().split(",");
+			for (int i = 0; i < idList.length; i++) {
+				String type = typeMap.get(idList[i]);
+				if(type.equals("INT")) {
+					IRNode irNode = new IRNode("READI", null, null, idList[i]);
+					IRList.add(irNode);
+				} else if (type.equals("FLOAT")) {
+					IRNode irNode = new IRNode("READF", null, null, idList[i]);
+					IRList.add(irNode);
+				} else {
+					System.out.println("Invalid type to read");
+				}
+			}
+		}
+	}
 
 	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
 		System.out.println(";IR code");
@@ -333,7 +358,7 @@ public class MicroIRListener extends MicroBaseListener{
 
 	}
 
-
+//END Generate IR Node
 }
 
 
