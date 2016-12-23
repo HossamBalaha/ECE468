@@ -18,6 +18,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private int tinyCount = 0;
 	private int labelNum = 1;
 	private int localNum = 0;
+	private int paraNum = 0;
 
 	private void addopList() {
 		opList.add("ADDI");
@@ -38,8 +39,16 @@ public class MicroIRListener extends MicroBaseListener{
 			if (str.charAt(1) == 'L') {
 				regMap.put(str,("$-" + str.substring(2)));
 				return ("$-" + str.substring(2));
+			} else if(str.charAt(1) == 'P') {
+				regMap.put(str, ("$" + (6 + paraNum - Integer.parseInt(str.substring(2)))));
+				return ("$" + (6 + paraNum - Integer.parseInt(str.substring(2))));
+			} else if (str.charAt(1) == 'R') {
+				regMap.put(str, "$" + (6 + paraNum));
+				return ("$" + (6 + paraNum));
+			} else {
+				regMap.put(str, ("r" + tinyCount++));
+				return ("r" + tinyCount++);
 			}
-			return str;
 		} else {
 			String s = "r" + tinyCount++;
 			regMap.put(str, s);
