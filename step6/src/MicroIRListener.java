@@ -34,6 +34,12 @@ public class MicroIRListener extends MicroBaseListener{
 	private String getTinyReg(String str) {
 		if(str.contains("$") && regMap.containsKey(str)) {
 			return regMap.get(str);
+		} else if(str.contains("$") && str.length() > 2){
+			if (str.charAt(1) == 'L') {
+				regMap.put(str,("$-" + str.substring(2)));
+				return ("$-" + str.substring(2));
+			}
+			return str;
 		} else {
 			String s = "r" + tinyCount++;
 			regMap.put(str, s);
@@ -159,7 +165,7 @@ public class MicroIRListener extends MicroBaseListener{
 			TNList.add(new TinyNode(getOp(opCode), null, result));
 		} else if(opCode.equals("LINK")) {
 			TNList.add(new TinyNode(getOp(opCode), null, getLocalNum()));
-		}  else if(opList.contains(opCode)){
+		} else if(opList.contains(opCode)){
 			if (operand1.contains("$") && operand2.contains("$")) {
 				temp = getTinyReg(operand1);
 				TNList.add(new TinyNode(getOp(opCode), getTinyReg(operand2), temp));
