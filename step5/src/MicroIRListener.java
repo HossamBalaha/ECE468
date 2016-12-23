@@ -10,8 +10,21 @@ public class MicroIRListener extends MicroBaseListener{
 	private ParseTreeProperty<Node> PTProperty =  new ParseTreeProperty<Node>();
 	private HashMap<String, String> typeMap = new HashMap<String, String>();
 	private HashMap<String, String> regMap = new HashMap<String, String>();
+	private ArrayList<String> opList = new ArrayList<String>();
 	private int registerCount = 1;
 	private int tinyCount = 0;
+
+	private void addopList() {
+		opList.add("ADDI");
+		opList.add("ADDF");
+		opList.add("SUBI");
+		opList.add("SUBF");
+		opList.add("MULTI");
+		opList.add("MULTF");
+		opList.add("DIVI");
+		opList.add("DIVF");
+		return;
+	}
 
 	private String getTinyReg(String str) {
 		if(str.contains("$") && regMap.containsKey(str)) {
@@ -84,11 +97,20 @@ public class MicroIRListener extends MicroBaseListener{
 			case "DIVF": return "divr";
 			case "WRITEI": return "sys writei";
 			case "WRITEF": return "sys writer";
+			case "READI": return "readi";
+			case "READF": return "readf";
+			case "EQ": return "jeq";
+			case "NE": return "jne";
+			case "GT": return "jgt";
+			case "GE": return "jge";
+			case "LT": return "jlt";
+			case "LE": return "jle";
 		}
 		return opCode;
 	}
 
 	public void convertIRtoTiny(IRNode irNode) {
+		addopList();
 		String opCode = irNode.getOpCode();
 		String operand1 = irNode.getOperand1();
 		String operand2 = irNode.getOperand2();
@@ -102,7 +124,7 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 		} else if(opCode.equals("WRITEI") || opCode.equals("WRITEF")) {
 			TNList.add(new TinyNode(getOp(opCode), null, result));
-		} else {
+		} else if(opList.contains(opCode)){
 			if (operand1.contains("$") && operand2.contains("$")) {
 				temp = getTinyReg(operand1);
 				TNList.add(new TinyNode(getOp(opCode), getTinyReg(operand2), temp));
@@ -119,7 +141,13 @@ public class MicroIRListener extends MicroBaseListener{
 				TNList.add(new TinyNode(getOp(opCode), operand2, temp));
 			}
 			regMap.put(result,temp);
-
+		} else if (opCode.equals("LABEL") || opCode.equals("JUMP")) {
+			TNList.add(new TinyNode(getOp(opCode), null, result));
+		} else {
+			//case op2 is constant
+			if (!operand2.contains("$")) {
+				TNList.add(new TinyNode("move", operand2, getTinyReg(operand2)));
+			}
 		}
 
 	}
