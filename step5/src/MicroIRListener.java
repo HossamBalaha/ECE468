@@ -133,13 +133,15 @@ public class MicroIRListener extends MicroBaseListener{
 			} else {
 				TNList.add(new TinyNode("move", operand1, getTinyReg(result)));
 			}
-			if(opCode.equals("STOREI")){
+			if(opCode.equals("STOREI") && result.contains("$")){
 				tinyMap.put(result,"INT");
-			} else {
+			} else if (opCode.equals("STOREF") && result.contains("$")){
 				tinyMap.put(result,"FLOAT");
 			}
 		} else if(opCode.equals("WRITEI") || opCode.equals("WRITEF")) {
 			TNList.add(new TinyNode(getOp(opCode), null, result));
+		} else if(opCode.equals("READI") || opCode.equals("READF")){
+			TNList.add(new TinyNode("sys", getOp(opCode), result));
 		} else if(opList.contains(opCode)){
 			if (operand1.contains("$") && operand2.contains("$")) {
 				temp = getTinyReg(operand1);
@@ -166,7 +168,12 @@ public class MicroIRListener extends MicroBaseListener{
 				TNList.add(new TinyNode("move", operand2, getTinyReg(operand2)));
 			}
 			// cmp type
-			if (tinyMap.get(operand2).equals("INT")) {
+
+			if (tinyMap.get(operand1) != null && tinyMap.get(operand1).equals("INT") && tinyMap.get(operand2).equals("INT")) {
+				TNList.add(new TinyNode("cmpi", getTinyReg(operand1), temp));
+			} else if(tinyMap.get(operand1) != null && tinyMap.get(operand1).equals("FLOAT") && tinyMap.get(operand2).equals("FLOAT")) {
+				TNList.add(new TinyNode("cmpr", getTinyReg(operand1), temp));
+			} else if (tinyMap.get(operand2).equals("INT")) {
 				TNList.add(new TinyNode("cmpi", operand1, temp));
 			} else if(tinyMap.get(operand2).equals("FLOAT")) {
 				TNList.add(new TinyNode("cmpr", operand1, temp));
