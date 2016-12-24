@@ -15,6 +15,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private HashMap<String, String> typeMap = new HashMap<String, String>();
 	private HashMap<String, String> regMap = new HashMap<String, String>();
 	private HashMap<String, String> tinyMap = new HashMap<String, String>();
+	private HashMap<String, String> IRregMap = new HashMap<String, String>();
 	private HashMap<String, Function> functionMap = new HashMap<String, Function>();
 	private HashSet<String>globalVar = new HashSet<String>();
 	private ArrayList<String> opList = new ArrayList<String>();
@@ -25,6 +26,8 @@ public class MicroIRListener extends MicroBaseListener{
 	private int localNum = 0;
 	private int paraNum = 0;
 	private int pushflag = 0;
+	private int parameterRegCount = 0;
+	private int localRegCount = 0;
 
 	private void addopList() {
 		opList.add("ADDI");
@@ -65,6 +68,15 @@ public class MicroIRListener extends MicroBaseListener{
 	private String getReg(){
 		return "$T" + Integer.toString(registerCount++);
 	}
+
+	private String getPReg() {
+		return "$P" + Integer.toString(parameterRegCount++);
+	}
+
+	private String getLocalReg() {
+		return "$L" + Integer.toString(localRegCount++);
+	}
+
 	private String convertTinyReg(String input){
 		if (input == null) {
 			return null;
@@ -275,7 +287,7 @@ public class MicroIRListener extends MicroBaseListener{
 		System.out.println(";tiny code");
 		for (int i = 0; i < TNList.size(); i++) {
 			TNList.get(i).printNode();
-		}
+		}/*
 		Iterator<Function> it = functionMap.values().iterator();
 		while(it.hasNext()) {
 			Function curr = it.next();
@@ -284,7 +296,7 @@ public class MicroIRListener extends MicroBaseListener{
 			for(int i = 0; i < localVar.size(); i++) {
 				System.out.println(localVar.get(i)+ " "+typeMap.get(localVar.get(i)));
 			}
-		}
+		}*/
 
 	}
 
@@ -303,8 +315,32 @@ public class MicroIRListener extends MicroBaseListener{
 				functionMap.get(scope).addLocalVar(currSymbol.getName());
 			}
 		}
-		
-		
+	}
+
+	@Override public void enterFunc_decl(MicroParser.Func_declContext ctx) {
+		String functionName = ctx.getChild(2).getText();
+		IRList.add(new IRNode("LABEL", null, null, functionName));
+		IRList.add(new IRNode("LINK", null, null, null));
+	}
+	@Override public void exitReturn_stmt(MicroParser.Return_stmtContext ctx) {
+		System.out.println("return");
+		if(ctx.getChild(1).getText().length() != 0) {
+			String value = ctx.getChild(1).getText();
+			String type;
+			if (checkType(value).contains("$")) {
+				type = checkType(IRregMap.get(value));
+			} else if(checkType(value).equals("ID")){
+				type = checkType(typeMap.get(value));
+			} else {
+				type = checkType(value);
+			}
+			if(type.equals("INT")) {
+				IRList.add(new IRNode("STOREI", value, null, "$R"));
+			} else if (type.equals("FLOAT")) {
+				IRList.add(new IRNode("STOREF", value, null, "$R"));
+			}
+		}
+		IRList.add(new IRNode("RET", null, null, ""));
 	}
 
 	@Override public void exitVar_decl(MicroParser.Var_declContext ctx) {
@@ -315,6 +351,7 @@ public class MicroIRListener extends MicroBaseListener{
 			typeMap.put(idList[i], type);
 				
 		}	
+		
 
 	}
 
@@ -346,6 +383,7 @@ public class MicroIRListener extends MicroBaseListener{
 				IRNode irNode = new IRNode(opCode, primary, null, regName);
 				IRList.add(irNode);
 				Node node = new Node(null, regName, type);
+				IRregMap.put(regName, type);
 				PTProperty.put(ctx,node);
 			} else {
 				Node node = getNode(ctx.getChild(0));
@@ -371,6 +409,7 @@ public class MicroIRListener extends MicroBaseListener{
 			IRNode irNode = new IRNode(opCode, factor_prefix.getValue(), postfixText, regName);
 			IRList.add(irNode);
 			Node factor = new Node(null, regName, postfixType);
+			IRregMap.put(regName, postfixType);
 			PTProperty.put(ctx, factor);
 		}
 	}
@@ -391,6 +430,7 @@ public class MicroIRListener extends MicroBaseListener{
 			IRNode irNode = new IRNode(opCode, expr_prefix.getValue(), factor.getValue(), regName);
 			IRList.add(irNode);
 			Node expr_prefixNew = new Node(ctx.getChild(2).getText(), regName, factor.getType());
+			IRregMap.put(regName,  factor.getType());
 			PTProperty.put(ctx, expr_prefixNew);
 		}
 
@@ -418,6 +458,7 @@ public class MicroIRListener extends MicroBaseListener{
 				IRNode irNode = new IRNode(opCode, value, postfix_expr.getValue(), regName);
 				IRList.add(irNode);
 				Node node = new Node(mulop, value, postfix_expr.getType());
+				IRregMap.put(regName, postfix_expr.getType());
 				PTProperty.put(ctx, node);
 
 			}
@@ -438,6 +479,7 @@ public class MicroIRListener extends MicroBaseListener{
 			IRNode irNode = new IRNode(opCode, value, factorValue, regName);
 			IRList.add(irNode);
 			Node node = new Node(null, regName, factorType);
+			IRregMap.put(regName, factorType);
 			PTProperty.put(ctx, node);
 		} else {
 			Node node = new Node(null, factorValue, factorType);
@@ -447,6 +489,7 @@ public class MicroIRListener extends MicroBaseListener{
 
 
 	@Override public void exitAssign_expr(MicroParser.Assign_exprContext ctx){
+		System.out.println("Assignment");
 		String type = typeMap.get(ctx.getChild(0).getText());
 		Node expr = getNode(ctx.getChild(2));
 		String opName = "";
@@ -547,6 +590,8 @@ public class MicroIRListener extends MicroBaseListener{
 			String regName2 = getReg();
 			IRList.add(new IRNode("STOREI", "1", null, regName1));
 			IRList.add(new IRNode("STOREI", "1", null, regName2));
+			IRregMap.put(regName1, "1");
+			IRregMap.put(regName2, "1");
 			String trueFalse = ctx.getChild(0).getText();
 			if (trueFalse.equals("TRUE")) {
 				IRList.add(new IRNode("NE", regName1, regName2, headLabel));
