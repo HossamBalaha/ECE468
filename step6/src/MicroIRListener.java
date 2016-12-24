@@ -12,11 +12,11 @@ public class MicroIRListener extends MicroBaseListener{
 	private ArrayList<IRNode> IRList = new ArrayList<IRNode>();
 	private ArrayList<TinyNode> TNList = new ArrayList<TinyNode>();
 	private ParseTreeProperty<Node> PTProperty =  new ParseTreeProperty<Node>();
-	private HashMap<String, String> typeMap = new HashMap<String, String>();
-	private HashMap<String, String> regMap = new HashMap<String, String>();
-	private HashMap<String, String> tinyMap = new HashMap<String, String>();
+	private HashMap<String, String> typeMap = new HashMap<String, String>();//Identifier type
+	private HashMap<String, String> regMap = new HashMap<String, String>();//Tiny
+	private HashMap<String, String> tinyMap = new HashMap<String, String>();//Tiny
 	private HashMap<String, String> IRregMap = new HashMap<String, String>();
-	private HashMap<String, Function> functionMap = new HashMap<String, Function>();
+	private HashMap<String, Function> functionMap = new HashMap<String, Function>();//All functions
 	private HashSet<String>globalVar = new HashSet<String>();
 	private ArrayList<String> opList = new ArrayList<String>();
 	private Stack<LabelNode> labelStack = new Stack<LabelNode>();
@@ -323,14 +323,14 @@ public class MicroIRListener extends MicroBaseListener{
 		IRList.add(new IRNode("LINK", null, null, null));
 	}
 	@Override public void exitReturn_stmt(MicroParser.Return_stmtContext ctx) {
-		System.out.println("return");
 		if(ctx.getChild(1).getText().length() != 0) {
 			String value = ctx.getChild(1).getText();
 			String type;
+			
 			if (checkType(value).contains("$")) {
 				type = checkType(IRregMap.get(value));
 			} else if(checkType(value).equals("ID")){
-				type = checkType(typeMap.get(value));
+				type = typeMap.get(value);
 			} else {
 				type = checkType(value);
 			}
@@ -341,6 +341,13 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 		}
 		IRList.add(new IRNode("RET", null, null, ""));
+		IRList.add(new IRNode(null, null, null, ""));
+	}
+	@Override public void exitParam_decl(MicroParser.Param_declContext ctx) {
+		String type = ctx.getChild(0).getText();
+		String name = ctx.getChild(1).getText();
+		typeMap.put(name, type);
+		
 	}
 
 	@Override public void exitVar_decl(MicroParser.Var_declContext ctx) {
@@ -349,7 +356,6 @@ public class MicroIRListener extends MicroBaseListener{
 		for (int i = 0; i < idList.length; i++) {
 			TNList.add(new TinyNode("var", idList[i], null));
 			typeMap.put(idList[i], type);
-				
 		}	
 		
 
@@ -489,7 +495,6 @@ public class MicroIRListener extends MicroBaseListener{
 
 
 	@Override public void exitAssign_expr(MicroParser.Assign_exprContext ctx){
-		System.out.println("Assignment");
 		String type = typeMap.get(ctx.getChild(0).getText());
 		Node expr = getNode(ctx.getChild(2));
 		String opName = "";
@@ -519,7 +524,10 @@ public class MicroIRListener extends MicroBaseListener{
 				} else if (type.equals("FLOAT")) {
 					IRNode irNode = new IRNode("WRITEF", null, null, idList[i]);
 					IRList.add(irNode);
-				} else {
+				} else if (type.equals("STRING")) {
+					IRNode irNode = new IRNode("WRITES", null, null, idList[i]);
+					IRList.add(irNode);
+				}else {
 					System.out.println("Invalid type to write");
 				}
 			}
@@ -537,6 +545,9 @@ public class MicroIRListener extends MicroBaseListener{
 					IRList.add(irNode);
 				} else if (type.equals("FLOAT")) {
 					IRNode irNode = new IRNode("READF", null, null, idList[i]);
+					IRList.add(irNode);
+				} else if (type.equals("STRING")) {
+					IRNode irNode = new IRNode("READS", null, null, idList[i]);
 					IRList.add(irNode);
 				} else {
 					System.out.println("Invalid type to read");
