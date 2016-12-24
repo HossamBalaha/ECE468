@@ -1,7 +1,10 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.Iterator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
@@ -12,6 +15,8 @@ public class MicroIRListener extends MicroBaseListener{
 	private HashMap<String, String> typeMap = new HashMap<String, String>();
 	private HashMap<String, String> regMap = new HashMap<String, String>();
 	private HashMap<String, String> tinyMap = new HashMap<String, String>();
+	private HashMap<String, Function> functionMap = new HashMap<String, Function>();
+	private HashSet<String>globalVar = new HashSet<String>();
 	private ArrayList<String> opList = new ArrayList<String>();
 	private Stack<LabelNode> labelStack = new Stack<LabelNode>();
 	private int registerCount = 1;
@@ -264,15 +269,42 @@ public class MicroIRListener extends MicroBaseListener{
 		System.out.println(";IR code");
 		for (int i = 0; i < IRList.size(); i++) {
 			IRList.get(i).printNode();
-			convertIRtoTiny(IRList.get(i));
+			//convertIRtoTiny(IRList.get(i));
 		}
 		TNList.add(new TinyNode("sys halt", null, null));
 		System.out.println(";tiny code");
 		for (int i = 0; i < TNList.size(); i++) {
 			TNList.get(i).printNode();
 		}
-		
+		Iterator<Function> it = functionMap.values().iterator();
+		while(it.hasNext()) {
+			Function curr = it.next();
+			System.out.println(curr.getName());
+			ArrayList<String> localVar= curr.getLocalVar();
+			for(int i = 0; i < localVar.size(); i++) {
+				System.out.println(localVar.get(i)+ " "+typeMap.get(localVar.get(i)));
+			}
+		}
 
+	}
+
+	@Override public void enterProgram(MicroParser.ProgramContext ctx) {
+		while(true) {
+			SymbolTable st = SymbolTableStack.stack.pop();
+			String scope = st.getScope();
+			if(scope.equals("GLOBAL")){
+				globalVar.add(scope);
+				break;
+			}
+			Iterator<Symbol> it = st.getEntryMap().values().iterator();
+			functionMap.put(scope, new Function(scope));
+			while(it.hasNext()) {
+				Symbol currSymbol = it.next();
+				functionMap.get(scope).addLocalVar(currSymbol.getName());
+			}
+		}
+		
+		
 	}
 
 	@Override public void exitVar_decl(MicroParser.Var_declContext ctx) {
@@ -281,7 +313,9 @@ public class MicroIRListener extends MicroBaseListener{
 		for (int i = 0; i < idList.length; i++) {
 			TNList.add(new TinyNode("var", idList[i], null));
 			typeMap.put(idList[i], type);
-		}
+				
+		}	
+
 	}
 
 	@Override public void exitString_decl(MicroParser.String_declContext ctx) {
@@ -587,5 +621,33 @@ class LabelNode {
 	}
 	public String getOutLabel() {
 		return this.outLabel;
+	}
+}
+
+class Function {
+	private String name;
+	private ArrayList<IRNode> IRList;
+	private ArrayList<String> localVar ;
+
+	public Function(String name) {
+		this.name = name;
+		this.IRList = new ArrayList<IRNode>();
+		this.localVar = new ArrayList<String>();
+	}
+
+	public void addIRNode(IRNode node) {
+		this.IRList.add(node);
+	}
+
+	public void addLocalVar(String localVar) {
+		this.localVar.add(localVar);
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public ArrayList<String> getLocalVar() {
+		return this.localVar;
 	}
 }
