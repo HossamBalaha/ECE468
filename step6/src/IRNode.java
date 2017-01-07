@@ -24,14 +24,29 @@ public class IRNode {
 	public String getResult() {
 		return this.result;
 	}
+	public void setOperand1(String operand1) {
+		this.operand1 = operand1;
+	}
+
+	public void setOperand2(String operand2) {
+		this.operand2 = operand2;
+	}
+
+	public void setResult(String result) {
+		this.result = result;
+	}
 
 	public void printNode() {
 		String operand1 = (this.operand1 == null) ? "" : " " + this.operand1;
 		String operand2 = (this.operand2 == null) ? "" : " " + this.operand2;
 		String opCode = (this.opCode == null) ? "" : this.opCode;
 		String result = (this.result == null) ? "" : " " + this.result;
-
-		System.out.println(";" + opCode + operand1 + operand2 + result);
+		if (operand1 == "" && operand2 == "" && opCode == "" && result == "") {
+			System.out.println();
+		} else {
+			System.out.println(";" + opCode + operand1 + operand2 + result);
+		}
+		
 	}
 
 }

@@ -13,6 +13,8 @@ public class MicroIRListener extends MicroBaseListener{
 	private ArrayList<TinyNode> TNList = new ArrayList<TinyNode>();
 	private ParseTreeProperty<Node> PTProperty =  new ParseTreeProperty<Node>();
 	private HashMap<String, String> typeMap = new HashMap<String, String>();//Identifier type
+	private HashMap<String, HashMap<String,String>> functionTypeMap = new HashMap<String, HashMap<String,String>>();
+	private HashMap<String, HashMap<String,String>> exprMap = new HashMap<String, HashMap<String,String>>();
 	private HashMap<String, String> regMap = new HashMap<String, String>();//Tiny
 	private HashMap<String, String> tinyMap = new HashMap<String, String>();//Tiny
 	private HashMap<String, String> IRregMap = new HashMap<String, String>();
@@ -20,14 +22,14 @@ public class MicroIRListener extends MicroBaseListener{
 	private HashSet<String>globalVar = new HashSet<String>();
 	private ArrayList<String> opList = new ArrayList<String>();
 	private Stack<LabelNode> labelStack = new Stack<LabelNode>();
+	private String currFunction = "global";
 	private int registerCount = 1;
 	private int tinyCount = 0;
 	private int labelNum = 1;
 	private int localNum = 0;
 	private int paraNum = 0;
 	private int pushflag = 0;
-	private int parameterRegCount = 0;
-	private int localRegCount = 0;
+	
 
 	private void addopList() {
 		opList.add("ADDI");
@@ -67,14 +69,6 @@ public class MicroIRListener extends MicroBaseListener{
 
 	private String getReg(){
 		return "$T" + Integer.toString(registerCount++);
-	}
-
-	private String getPReg() {
-		return "$P" + Integer.toString(parameterRegCount++);
-	}
-
-	private String getLocalReg() {
-		return "$L" + Integer.toString(localRegCount++);
 	}
 
 	private String convertTinyReg(String input){
@@ -277,10 +271,41 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 //Generate IR Node
+	public void replaceVar(IRNode irNode, HashMap<String,String> varMap) {
+		
+		String operand1 = irNode.getOperand1();
+		String operand2 = irNode.getOperand2();
+		String result = irNode.getResult();
+
+		if (operand1 != null) {
+			if (varMap.containsKey(operand1)) {
+				irNode.setOperand1(varMap.get(operand1));
+			}
+		}
+		if (operand2 != null) {
+			if (varMap.containsKey(operand2)) {
+				irNode.setOperand2(varMap.get(operand2));
+			}
+		}
+		if (result != null) {
+			if (varMap.containsKey(result)) {
+				irNode.setResult(varMap.get(result));
+			}
+		}
+	}
 	@Override public void exitPgm_body(MicroParser.Pgm_bodyContext ctx) { 
 		System.out.println(";IR code");
+		HashMap<String,String> varMap = null;
 		for (int i = 0; i < IRList.size(); i++) {
+			if (IRList.get(i).getOpCode() == "LABEL" && functionMap.containsKey(IRList.get(i).getResult())) {
+				varMap = functionMap.get(IRList.get(i).getResult()).getVarMap();
+			}
+			if (varMap != null) {
+				replaceVar(IRList.get(i), varMap);
+			}
+			
 			IRList.get(i).printNode();
+
 			//convertIRtoTiny(IRList.get(i));
 		}
 		TNList.add(new TinyNode("sys halt", null, null));
@@ -288,19 +313,21 @@ public class MicroIRListener extends MicroBaseListener{
 		for (int i = 0; i < TNList.size(); i++) {
 			TNList.get(i).printNode();
 		}/*
-		Iterator<Function> it = functionMap.values().iterator();
+		Iterator<String> it = functionTypeMap.keySet().iterator();
 		while(it.hasNext()) {
-			Function curr = it.next();
-			System.out.println(curr.getName());
-			ArrayList<String> localVar= curr.getLocalVar();
-			for(int i = 0; i < localVar.size(); i++) {
-				System.out.println(localVar.get(i)+ " "+typeMap.get(localVar.get(i)));
+			String curr = it.next();
+			System.out.println(curr);
+			Iterator<String> it_name = functionTypeMap.get(curr).keySet().iterator();
+			while(it_name.hasNext()) {
+				String name = it_name.next();
+				System.out.println(name + " "+functionTypeMap.get(curr).get(name));
 			}
 		}*/
 
 	}
 
 	@Override public void enterProgram(MicroParser.ProgramContext ctx) {
+		functionTypeMap.put(currFunction, new HashMap<String,String>());
 		while(true) {
 			SymbolTable st = SymbolTableStack.stack.pop();
 			String scope = st.getScope();
@@ -316,19 +343,73 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 		}
 	}
+	@Override public void exitCall_expr(MicroParser.Call_exprContext ctx) {
+		String functionName = ctx.getChild(0).getText();
+		String returnType = functionMap.get(functionName).getRetureType();
+		IRList.add(new IRNode("PUSH", null, null, null));
+
+		String[] exprList = ctx.getChild(2).getText().trim().split(",");
+		for (int i = 0; i < exprList.length; i++) {
+			if (exprMap.get(currFunction).containsKey(exprList[i])) {
+				IRList.add(new IRNode("PUSH", null, null, exprMap.get(currFunction).get(exprList[i])));
+			} else {
+				IRList.add(new IRNode("PUSH", null, null, exprList[i]));
+			}
+			
+		}	
+		IRList.add(new IRNode("JSR", null, null, functionName));
+		
+		for (int i = 0; i < exprList.length; i++) {
+			IRList.add(new IRNode("POP", null, null, null));
+		}	
+		
+		String regName = getReg();
+		IRList.add(new IRNode("POP", null, null, regName));
+		Node node = new Node(null, regName, returnType);
+		functionTypeMap.get(currFunction).put(regName, returnType);
+		PTProperty.put(ctx, node);
+		
+	}
 
 	@Override public void enterFunc_decl(MicroParser.Func_declContext ctx) {
 		String functionName = ctx.getChild(2).getText();
+		String returnType = ctx.getChild(1).getText();
+		currFunction = functionName;
+		functionMap.get(functionName).setReturnType(returnType);
+		functionTypeMap.put(functionName, new HashMap<String,String>());
+		exprMap.put(functionName, new HashMap<String,String>());
 		IRList.add(new IRNode("LABEL", null, null, functionName));
 		IRList.add(new IRNode("LINK", null, null, null));
+		registerCount = 1;
 	}
+
+	@Override public void exitFunc_body(MicroParser.Func_bodyContext ctx) {
+		functionMap.get(currFunction).createMap();
+		HashMap<String,String> varMap = functionMap.get(currFunction).getVarMap();
+		Iterator<String> it = varMap.keySet().iterator();
+		while(it.hasNext()) {
+			String name = it.next();
+			String type = functionTypeMap.get(currFunction).get(name);
+			functionTypeMap.get(currFunction).put(varMap.get(name), type);
+			functionTypeMap.get(currFunction).remove(name);
+		}
+		IRList.add(new IRNode(null,null,null,null));
+	}
+
 	@Override public void exitReturn_stmt(MicroParser.Return_stmtContext ctx) {
 		if(ctx.getChild(1).getText().length() != 0) {
-			String value = ctx.getChild(1).getText();
+			String expr = ctx.getChild(1).getText();
 			String type;
-			
-			if (checkType(value).contains("$")) {
-				type = checkType(IRregMap.get(value));
+			String value;
+			if (exprMap.get(currFunction).containsKey(expr)) {
+				value = exprMap.get(currFunction).get(expr);
+				
+			} else {
+				value = expr;
+			}
+			if (value.contains("$")) {
+				type = functionTypeMap.get(currFunction).get(value);
+
 			} else if(checkType(value).equals("ID")){
 				type = typeMap.get(value);
 			} else {
@@ -341,12 +422,14 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 		}
 		IRList.add(new IRNode("RET", null, null, ""));
-		IRList.add(new IRNode(null, null, null, ""));
+		
 	}
 	@Override public void exitParam_decl(MicroParser.Param_declContext ctx) {
 		String type = ctx.getChild(0).getText();
 		String name = ctx.getChild(1).getText();
 		typeMap.put(name, type);
+		functionTypeMap.get(currFunction).put(name, type);
+		functionMap.get(currFunction).addParamVar(name);
 		
 	}
 
@@ -354,7 +437,10 @@ public class MicroIRListener extends MicroBaseListener{
 		String type = ctx.getChild(0).getText();
 		String[] idList = ctx.getChild(1).getText().trim().split(",");
 		for (int i = 0; i < idList.length; i++) {
-			TNList.add(new TinyNode("var", idList[i], null));
+			if (currFunction == "global") {
+				TNList.add(new TinyNode("var", idList[i], null));
+			}
+			functionTypeMap.get(currFunction).put(idList[i], type);
 			typeMap.put(idList[i], type);
 		}	
 		
@@ -365,7 +451,11 @@ public class MicroIRListener extends MicroBaseListener{
 		String name = ctx.getChild(1).getText();
 		String value = ctx.getChild(3).getText();
 		typeMap.put(name, "STRING");
-		TNList.add(new TinyNode("str", name, value));
+		functionTypeMap.get(currFunction).put(name, "STRING");
+		if (currFunction == "global") {
+			TNList.add(new TinyNode("str", name, value));
+		}
+		
 	}
 
 
@@ -389,7 +479,7 @@ public class MicroIRListener extends MicroBaseListener{
 				IRNode irNode = new IRNode(opCode, primary, null, regName);
 				IRList.add(irNode);
 				Node node = new Node(null, regName, type);
-				IRregMap.put(regName, type);
+				functionTypeMap.get(currFunction).put(regName,type);
 				PTProperty.put(ctx,node);
 			} else {
 				Node node = getNode(ctx.getChild(0));
@@ -415,7 +505,7 @@ public class MicroIRListener extends MicroBaseListener{
 			IRNode irNode = new IRNode(opCode, factor_prefix.getValue(), postfixText, regName);
 			IRList.add(irNode);
 			Node factor = new Node(null, regName, postfixType);
-			IRregMap.put(regName, postfixType);
+			functionTypeMap.get(currFunction).put(regName,postfixType);
 			PTProperty.put(ctx, factor);
 		}
 	}
@@ -436,7 +526,7 @@ public class MicroIRListener extends MicroBaseListener{
 			IRNode irNode = new IRNode(opCode, expr_prefix.getValue(), factor.getValue(), regName);
 			IRList.add(irNode);
 			Node expr_prefixNew = new Node(ctx.getChild(2).getText(), regName, factor.getType());
-			IRregMap.put(regName,  factor.getType());
+			functionTypeMap.get(currFunction).put(regName,factor.getType());
 			PTProperty.put(ctx, expr_prefixNew);
 		}
 
@@ -464,7 +554,7 @@ public class MicroIRListener extends MicroBaseListener{
 				IRNode irNode = new IRNode(opCode, value, postfix_expr.getValue(), regName);
 				IRList.add(irNode);
 				Node node = new Node(mulop, value, postfix_expr.getType());
-				IRregMap.put(regName, postfix_expr.getType());
+				functionTypeMap.get(currFunction).put(regName, postfix_expr.getType());
 				PTProperty.put(ctx, node);
 
 			}
@@ -485,11 +575,13 @@ public class MicroIRListener extends MicroBaseListener{
 			IRNode irNode = new IRNode(opCode, value, factorValue, regName);
 			IRList.add(irNode);
 			Node node = new Node(null, regName, factorType);
-			IRregMap.put(regName, factorType);
+			functionTypeMap.get(currFunction).put(regName,factorType);
+			exprMap.get(currFunction).put(ctx.getChild(0).getText()+ctx.getChild(1).getText(), regName);
 			PTProperty.put(ctx, node);
 		} else {
 			Node node = new Node(null, factorValue, factorType);
 			PTProperty.put(ctx, node);
+
 		}
 	}
 
@@ -601,9 +693,10 @@ public class MicroIRListener extends MicroBaseListener{
 			String regName2 = getReg();
 			IRList.add(new IRNode("STOREI", "1", null, regName1));
 			IRList.add(new IRNode("STOREI", "1", null, regName2));
-			IRregMap.put(regName1, "1");
-			IRregMap.put(regName2, "1");
+			functionTypeMap.get(currFunction).put(regName1, "INT");
+			functionTypeMap.get(currFunction).put(regName2, "INT");
 			String trueFalse = ctx.getChild(0).getText();
+			
 			if (trueFalse.equals("TRUE")) {
 				IRList.add(new IRNode("NE", regName1, regName2, headLabel));
 			} else if (trueFalse.equals("FALSE")){
@@ -684,11 +777,17 @@ class Function {
 	private String name;
 	private ArrayList<IRNode> IRList;
 	private ArrayList<String> localVar ;
+	private ArrayList<String> paramVar;
+	private HashMap<String, String>varMap;
+	private String returnType;
 
 	public Function(String name) {
 		this.name = name;
 		this.IRList = new ArrayList<IRNode>();
 		this.localVar = new ArrayList<String>();
+		this.paramVar = new ArrayList<String>();
+		this.varMap = new HashMap<String, String>();
+		this.returnType = null;
 	}
 
 	public void addIRNode(IRNode node) {
@@ -698,6 +797,13 @@ class Function {
 	public void addLocalVar(String localVar) {
 		this.localVar.add(localVar);
 	}
+	public void addParamVar(String paramVar) {
+		this.paramVar.add(paramVar);
+		this.localVar.remove(paramVar);
+	}
+	public HashMap<String,String> getVarMap() {
+		return this.varMap;
+	}
 
 	public String getName() {
 		return this.name;
@@ -705,5 +811,24 @@ class Function {
 
 	public ArrayList<String> getLocalVar() {
 		return this.localVar;
+	}
+	public ArrayList<String> getParamVar() {
+		return this.paramVar;
+	}
+	public String getRetureType() {
+		return this.returnType;
+	}
+	public void setReturnType(String returnType) {
+		this.returnType = returnType;
+	}
+	public void createMap() {
+		int parameterRegCount = 1;
+		int localRegCount = 1;
+		for (int i = 0; i < paramVar.size(); i++) {
+			varMap.put(paramVar.get(i), "$P" + parameterRegCount++);
+		}
+		for (int i = 0; i < localVar.size(); i++) {
+			varMap.put(localVar.get(i), "$L" + localRegCount++);
+		}
 	}
 }
