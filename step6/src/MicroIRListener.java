@@ -232,7 +232,7 @@ public class MicroIRListener extends MicroBaseListener{
 			TNList.add(new TinyNode("push", null, "r1"));
 			TNList.add(new TinyNode("push", null, "r2"));
 			TNList.add(new TinyNode("push", null, "r3"));
-			TNList.add(new TinyNode("jsr", null, "r"));
+			TNList.add(new TinyNode("jsr", null, result));
 			TNList.add(new TinyNode("pop", null, "r3"));
 			TNList.add(new TinyNode("pop", null, "r2"));
 			TNList.add(new TinyNode("pop", null, "r1"));
