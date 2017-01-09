@@ -58,8 +58,9 @@ public class MicroIRListener extends MicroBaseListener{
 				regMap.put(str, "$" + (8));
 				return ("$" + (8));
 			} else {
-				regMap.put(str, ("r" + tinyCount));
-				return ("r" + tinyCount++);
+				String s = "r" + tinyCount++;
+				regMap.put(str, s);
+				return s;
 			}
 		} else {
 			String s = "r" + tinyCount++;
