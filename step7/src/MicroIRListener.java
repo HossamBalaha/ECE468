@@ -32,6 +32,41 @@ public class MicroIRListener extends MicroBaseListener{
 	private int pushflag = 0;
 	private int globalStringCount = 0;
 	
+	private void createCFGGraph() {
+		for (int i = 0; i < IRList.size(); i++) {
+			IRNode irnode = IRList.get(i);
+			if(irnode.getOpCode().equals("JUMP")) {
+				for(IRNode destNode : IRList) {
+					if(destNode.getOpCode().equals("LABEL") && irnode.getResult().equals(destNode.getResult())) {
+						irnode.addSuccessor(destNode);
+					}
+				}
+			} else if(irnode.getOpCode().equals("LE") || irnode.getOpCode().equals("GE") || irnode.getOpCode().equals("NE") || 
+			irnode.getOpCode().equals("GT") || irnode.getOpCode().equals("LT") || irnode.getOpCode().equals("EQ") ) {
+				for(IRNode destNode : IRList) {
+					if(destNode.getOpCode().equals("LABEL") && irnode.getResult().equals(destNode.getResult())) {
+						irnode.addSuccessor(destNode);
+					}
+				}
+				irnode.addSuccessor(IRList.get(i+1));
+			} else {
+				if(i+1 != IRList.size()) {
+					irnode.addSuccessor(IRList.get(i+1));
+				}
+			}
+		}
+
+		for (int i = 0; i < IRList.size(); i++) {
+			IRNode irnode = IRList.get(i);
+			ArrayList<IRNode> successor = irnode.getSuccessor();
+			for(IRNode destNode : successor) {
+				ArrayList<IRNode> predecessor = destNode.getPredecessor();
+				if(!predecessor.contains(irnode)) {
+					destNode.addPredecessor(irnode);
+				}
+			}
+		}
+	}
 
 	private void addopList() {
 		opList.add("ADDI");

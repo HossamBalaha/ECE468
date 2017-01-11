@@ -1,12 +1,33 @@
+import java.util.ArrayList;
 public class IRNode {
 	
 	private String opCode, operand1, operand2, result;
+	private ArrayList<IRNode> predecessor;
+	private ArrayList<IRNode> successor;
 
 	public IRNode(String inputOpCode, String inputOperand1, String inputOperand2, String inputResult) {
 		this.opCode = inputOpCode;
 		this.operand1 = inputOperand1;
 		this.operand2 = inputOperand2;
 		this.result = inputResult;
+		this.predecessor = new ArrayList<IRNode>();
+		this.successor = new ArrayList<IRNode>();
+	}
+
+	public void addPredecessor(IRNode irnode) {
+ 		this.predecessor.add(irnode);
+	}
+
+	public ArrayList<IRNode> getPredecessor() {
+		return this.predecessor;
+	}
+
+	public void addSuccessor(IRNode irnode) {
+ 		this.successor.add(irnode);
+	}
+
+	public ArrayList<IRNode> getSuccessor() {
+		return this.successor;
 	}
 
 	public String getOpCode() {
