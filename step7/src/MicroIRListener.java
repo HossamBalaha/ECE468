@@ -4,6 +4,7 @@ import java.util.Stack;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.LinkedHashMap;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
@@ -34,6 +35,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private int pushflag = 0;
 	private int globalStringCount = 0;
 	
+	//step7
 	private void createCFGGraph() {
 		for (int i = 0; i < IRList.size(); i++) {
 			IRNode irnode = IRList.get(i);
@@ -127,6 +129,87 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 
 		}
+	}
+
+	private void createInOut() {
+		createLeader();
+		ArrayList<Integer> indexList = new ArrayList<Integer>();
+		for(int i = 0; i < IRList.size(); i++) {
+			indexList.add(i);
+		}
+		while(indexList.isEmpty() != true) {
+			int i = indexList.remove(indexList.size()-1);
+			IRNode irnode = IRList.get(i);
+			Set<String> prevInSet = irnode.getInSet();
+			HashSet<String> prevOutSet = irnode.getOutSet();
+			HashSet<String> useSet = irnode.getGenSet();
+			HashSet<String> defSet = irnode.getKillSet();
+
+			if(irnode.getOpCode() == "RET") {
+				// Update inSet
+				HashSet<String> inSet = new HashSet<String>(useSet);
+				HashSet<String> outSet = new HashSet<String>(prevOutSet);
+				for (String def : defSet) {
+					outSet.remove(def);
+				}
+				for (String out : outSet) {
+					inSet.add(out);
+				}
+				irnode.setInSet(inSet);
+			} else {
+				//Ouset
+				HashSet<String> outSet = new HashSet<String>(prevOutSet);
+				for (IRNode successor : irnode.getSuccessor()) {
+					for (String in : successor.getInSet()) {
+						outSet.add(in);
+					}
+				}
+				irnode.setOutSet(outSet);
+				//Inset
+				Set<String> inSet = new HashSet<String>(useSet);
+				outSet = new HashSet<String>(outSet);
+				for (String def : defSet) {
+					outSet.remove(def);
+				}
+				for (String out : outSet) {
+					inSet.add(out);
+				}
+				irnode.setInSet((HashSet<String>)inSet);
+
+				if (!inSet.containsAll(prevInSet) || !prevInSet.containsAll(inSet)) {
+					for(IRNode predecessor : irnode.getPredecessor()) {
+						int idx = IRList.indexOf(predecessor);
+						if (!indexList.contains(idx)) {
+							indexList.add(idx);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void createLeader() {
+		for(IRNode irnode : IRList) {
+			ArrayList<IRNode> predList = irnode.getPredecessor();
+			if(predList.size() == 0) {
+				irnode.setLeader();
+			} else {
+				for(IRNode predecessor : predList) {
+					switch(predecessor.getOpCode()) {
+						case "JUMP":
+						case "EQ":
+						case "NE":
+						case "LE":
+						case "LT":
+						case "GE":
+						case "GT":
+						irnode.setLeader();
+						break;
+					}
+				}
+			}
+		}
+
 	}
 
 	private void addopList() {

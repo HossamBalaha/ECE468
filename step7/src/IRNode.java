@@ -7,32 +7,70 @@ public class IRNode {
 	private ArrayList<IRNode> successor;
 	private HashSet<String> genSet;
 	private HashSet<String> killSet;
+	private HashSet<String> inSet;
+	private HashSet<String> outSet;
+	private boolean isLeader;
 
 	public IRNode(String inputOpCode, String inputOperand1, String inputOperand2, String inputResult) {
 		this.opCode = inputOpCode;
 		this.operand1 = inputOperand1;
 		this.operand2 = inputOperand2;
 		this.result = inputResult;
+		this.isLeader = false;
 		this.predecessor = new ArrayList<IRNode>();
 		this.successor = new ArrayList<IRNode>();
-		this.genSet = new HashSet<>();
-		this.killSet = new HashSet<>();
+		this.genSet = new HashSet<String>();
+		this.killSet = new HashSet<String>();
+		this.inSet = new HashSet<String>();
+		this.outSet = new HashSet<String>();
+	}
+
+	public void addInSet(String str) {
+ 		this.inSet.add(str);
+	}
+
+	public void addOutSet(String str) {
+ 		this.outSet.add(str);
 	}
 
 	public void addGenSet(String str) {
  		this.genSet.add(str);
 	}
 
-	public HashSet<String> getGenSet() {
-		return this.genSet;
-	}
-
 	public void addKillSet(String str) {
  		this.killSet.add(str);
 	}
 
+	public HashSet<String> getInSet() {
+		return this.inSet;
+	}
+
+	public HashSet<String> getOutSet() {
+		return this.outSet;
+	}
+
+	public HashSet<String> getGenSet() {
+		return this.genSet;
+	}
+
 	public HashSet<String> getKillSet() {
 		return this.killSet;
+	}
+
+	public void setInSet(HashSet<String> set) {
+ 		this.inSet = set;
+	}
+
+	public void setOutSet(HashSet<String> set) {
+ 		this.outSet = set;
+	}
+
+	public void setGenSet(HashSet<String> set) {
+ 		this.genSet = set;
+	}
+
+	public void setKillSet(HashSet<String> set) {
+ 		this.killSet = set;
 	}
 
 	public void addPredecessor(IRNode irnode) {
@@ -66,6 +104,15 @@ public class IRNode {
 	public String getResult() {
 		return this.result;
 	}
+
+	public boolean getLeader() {
+		return this.isLeader;
+	}
+
+	public void setLeader() {
+		this.isLeader = true;
+	}
+
 	public void setOperand1(String operand1) {
 		this.operand1 = operand1;
 	}
