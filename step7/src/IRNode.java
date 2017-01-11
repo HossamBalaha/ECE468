@@ -1,9 +1,12 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 public class IRNode {
 	
 	private String opCode, operand1, operand2, result;
 	private ArrayList<IRNode> predecessor;
 	private ArrayList<IRNode> successor;
+	private HashSet<String> genSet;
+	private HashSet<String> killSet;
 
 	public IRNode(String inputOpCode, String inputOperand1, String inputOperand2, String inputResult) {
 		this.opCode = inputOpCode;
@@ -12,6 +15,24 @@ public class IRNode {
 		this.result = inputResult;
 		this.predecessor = new ArrayList<IRNode>();
 		this.successor = new ArrayList<IRNode>();
+		this.genSet = new HashSet<>();
+		this.killSet = new HashSet<>();
+	}
+
+	public void addGenSet(String str) {
+ 		this.genSet.add(str);
+	}
+
+	public HashSet<String> getGenSet() {
+		return this.genSet;
+	}
+
+	public void addKillSet(String str) {
+ 		this.killSet.add(str);
+	}
+
+	public HashSet<String> getKillSet() {
+		return this.killSet;
 	}
 
 	public void addPredecessor(IRNode irnode) {

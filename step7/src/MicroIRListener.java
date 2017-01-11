@@ -11,6 +11,8 @@ import org.antlr.v4.runtime.tree.*;
 public class MicroIRListener extends MicroBaseListener{
 	private ArrayList<IRNode> IRList = new ArrayList<IRNode>();
 	private ArrayList<TinyNode> TNList = new ArrayList<TinyNode>();
+	private ArrayList<String> globalVar = new ArrayList<String>();
+	private ArrayList<String> globalString = new ArrayList<String>();
 	private ParseTreeProperty<Node> PTProperty =  new ParseTreeProperty<Node>();
 	private HashMap<String, String> typeMap = new HashMap<String, String>();//Identifier type
 	private HashMap<String, HashMap<String,String>> functionTypeMap = new HashMap<String, HashMap<String,String>>();
@@ -19,7 +21,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private HashMap<String, String> tinyMap = new HashMap<String, String>();//Tiny
 	private HashMap<String, String> IRregMap = new HashMap<String, String>();
 	private HashMap<String, Function> functionMap = new HashMap<String, Function>();//All functions
-	private HashSet<String>globalVar = new HashSet<String>();
+	private HashSet<String>global = new HashSet<String>();
 	private ArrayList<String> opList = new ArrayList<String>();
 	private Stack<LabelNode> labelStack = new Stack<LabelNode>();
 	private String currFunction = "global";
@@ -65,6 +67,65 @@ public class MicroIRListener extends MicroBaseListener{
 					destNode.addPredecessor(irnode);
 				}
 			}
+		}
+
+		for (IRNode irnode : IRList) {
+			if(irnode.getOpCode().equals("VAR")) {
+				globalVar.add(irnode.getOperand1());
+			} else if(irnode.getOpCode().equals("STRING")) {
+				globalString.add(irnode.getOperand1());
+			} else {}
+		}
+	}
+
+	private void createGenKill() {
+		for(IRNode irnode : IRList) {
+			String opCode = irnode.getOpCode();
+			String operand1 = irnode.getOperand1();
+			String operand2 = irnode.getOperand2();
+			String result = irnode.getResult();
+			if(opCode == null) {
+				continue;
+			}
+			if(opCode.equals("PUSH") || opCode.equals("WRITE")) {
+				if(result != null) {
+					irnode.addGenSet(result);
+				}
+			} else if(opCode.equals("POP") || opCode.equals("READ")) {
+				if(result != null) {
+					irnode.addKillSet(result);
+				}
+			} else if(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
+				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ")) {
+				irnode.addGenSet(operand1);
+				irnode.addGenSet(operand2);
+			} else if(opCode.equals("JSR")) {
+				for(String str : globalVar) {
+					irnode.addGenSet(str);
+				}
+			} else if(opCode.equals("STOREI") || opCode.equals("STOREF")) {
+				if(!(operand1.matches("[0-9]+") || operand1.matches("[0-9]*\\.[0-9]+")) && operand1 != null){
+					irnode.addGenSet(operand1);
+				}
+				if(result != null) {
+					irnode.addKillSet(result);
+				}
+			} else {
+				if(opCode.equals("JUMP") || opCode.equals("LABEL") || opCode.equals("LINK") || 
+					opCode.equals("VAR") || opCode.equals("STRING")) {
+				} else {
+					if(operand1 != null) {
+						irnode.addGenSet(operand1);
+					}
+					if(operand2 != null) {
+						irnode.addGenSet(operand2);
+					}
+					if(result != null) {
+						irnode.addKillSet(result);
+					}
+				}
+			}
+
 		}
 	}
 
@@ -432,7 +493,7 @@ public class MicroIRListener extends MicroBaseListener{
 			SymbolTable st = SymbolTableStack.stack.pop();
 			String scope = st.getScope();
 			if(scope.equals("GLOBAL")){
-				globalVar.add(scope);
+				global.add(scope);
 				break;
 			}
 			Iterator<Symbol> it = st.getEntryMap().values().iterator();
