@@ -24,6 +24,9 @@ public class MicroIRListener extends MicroBaseListener{
 	private HashSet<String>global = new HashSet<String>();
 	private ArrayList<String> opList = new ArrayList<String>();
 	private Stack<LabelNode> labelStack = new Stack<LabelNode>();
+	private HashSet<String> currOutSet = new HashSet<String>();
+	private String[] register4R = new String[4];
+	private boolean[] dirty4R = new boolean[4];
 	private String currFunction = "global";
 	private String currLabel;
 	private int registerCount = 1;
@@ -33,6 +36,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private int paraNum = 1;
 	private int pushflag = 0;
 	private int globalStringCount = 0;
+	private int index = 0;
 	
 	private void createCFGGraph() {
 		for (int i = 0; i < IRList.size(); i++) {
@@ -69,13 +73,13 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 		}
 
-		for (IRNode irnode : IRList) {
+		/*for (IRNode irnode : IRList) {
 			if(irnode.getOpCode().equals("VAR")) {
 				globalVar.add(irnode.getOperand1());
 			} else if(irnode.getOpCode().equals("STRING")) {
 				globalString.add(irnode.getOperand1());
 			} else {}
-		}
+		}*/
 	}
 
 	private void createGenKill() {
@@ -111,8 +115,7 @@ public class MicroIRListener extends MicroBaseListener{
 					irnode.addKillSet(result);
 				}
 			} else {
-				if(opCode.equals("JUMP") || opCode.equals("LABEL") || opCode.equals("LINK") || 
-					opCode.equals("VAR") || opCode.equals("STRING")) {
+				if(opCode.equals("JUMP") || opCode.equals("LABEL") || opCode.equals("LINK")) {
 				} else {
 					if(operand1 != null) {
 						irnode.addGenSet(operand1);
@@ -139,6 +142,49 @@ public class MicroIRListener extends MicroBaseListener{
 		opList.add("DIVI");
 		opList.add("DIVF");
 		return;
+	}
+
+	private void createRegAllocation() {
+		for(index = 0; index < IRList.size(); index++) {
+			IRNode irnode = IRList.get(index);
+			String opCode = irnode.getOpCode();
+			String operand1 = irnode.getOperand1();
+			String operand2 = irnode.getOperand2();
+			String result = irnode.getResult();
+			currOutSet = irnode.getOutSet();
+			if(opCode == null) {
+				continue;
+			}
+			if(opCode.equals("LINK")) {
+				TNList.add(new TinyNode(getOp(opCode), null, "" + localNum));
+			} else if(opCode.equals("LABEL") || opCode.equals("JUMP")) {
+				if (functionMap.containsKey(result)){
+					currLabel = result;
+					localNum = functionMap.get(currLabel).getLocalVar().size();
+					paraNum = functionMap.get(currLabel).getParamVar().size();
+				}
+				TNList.add(new TinyNode(getOp(opCode), null, result));
+			} else if(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
+				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ")) {
+				int reg1 = ensure(operand1);
+				String r1 = "r" + Integer.toString(reg1);
+				int reg2 = ensure(operand2);
+				String r2 = "r" + Integer.toString(reg2);
+				String type = functionTypeMap.get(currLabel).get(operand1);
+				if(type.equals("INT")) {
+					TNList.add(new TinyNode("cmpi", r1, r2));
+				} else {
+					TNList.add(new TinyNode("cmpr", r1, r2));
+				}
+				if(!currOutSet.contains(register4R[reg1])) {
+					free(reg1);
+				}
+				if(!currOutSet.contains(register4R[reg2])) {
+					free(reg2);
+				}
+			}
+
+		}
 	}
 
 	private String getTinyReg(String str) {
@@ -599,6 +645,7 @@ public class MicroIRListener extends MicroBaseListener{
 		for (int i = 0; i < idList.length; i++) {
 			if (currFunction == "global") {
 				TNList.add(new TinyNode("var", idList[i], null));
+				globalVar.add(idList[i]);
 			}
 			functionTypeMap.get(currFunction).put(idList[i], type);
 			typeMap.put(idList[i], type);
@@ -614,6 +661,7 @@ public class MicroIRListener extends MicroBaseListener{
 		functionTypeMap.get(currFunction).put(name, "STRING");
 		if (currFunction == "global") {
 			TNList.add(new TinyNode("str", name, value));
+			globalString.add(name);
 			globalStringCount++;
 		}
 	}
