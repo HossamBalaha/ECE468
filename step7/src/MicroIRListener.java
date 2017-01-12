@@ -283,6 +283,19 @@ public class MicroIRListener extends MicroBaseListener{
 		return regIndex;
 	}
 
+	private void spill() {
+		System.out.println(";Spilling registers at the end of the Basic Block");
+		for (int i = 3; i >= 0; i--) {
+			if (register4R[1] != null) {
+				System.out.println(";Spilling variable: " + register4R[i]);
+				String mem = moveReg(register4R[i]);
+				System.out.println("move r" + Integer.toString(i) + " " + mem);
+				register4R[i] = null;
+				dirty4R[i] = false;
+			}
+		}
+	}
+
 	private void updateReg4R() {
 		String printResult ="{";
 		for (int i = 0; i < 4;i++) {
