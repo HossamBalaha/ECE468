@@ -1,14 +1,15 @@
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 public class IRNode {
 	
 	private String opCode, operand1, operand2, result;
 	private ArrayList<IRNode> predecessor;
 	private ArrayList<IRNode> successor;
-	private HashSet<String> genSet;
-	private HashSet<String> killSet;
-	private HashSet<String> inSet;
-	private HashSet<String> outSet;
+	private Set<String> genSet;
+	private Set<String> killSet;
+	private Set<String> inSet;
+	private Set<String> outSet;
 	private boolean isLeader;
 
 	public IRNode(String inputOpCode, String inputOperand1, String inputOperand2, String inputResult) {
@@ -41,35 +42,35 @@ public class IRNode {
  		this.killSet.add(str);
 	}
 
-	public HashSet<String> getInSet() {
+	public Set<String> getInSet() {
 		return this.inSet;
 	}
 
-	public HashSet<String> getOutSet() {
+	public Set<String> getOutSet() {
 		return this.outSet;
 	}
 
-	public HashSet<String> getGenSet() {
+	public Set<String> getGenSet() {
 		return this.genSet;
 	}
 
-	public HashSet<String> getKillSet() {
+	public Set<String> getKillSet() {
 		return this.killSet;
 	}
 
-	public void setInSet(HashSet<String> set) {
+	public void setInSet(Set<String> set) {
  		this.inSet = set;
 	}
 
-	public void setOutSet(HashSet<String> set) {
+	public void setOutSet(Set<String> set) {
  		this.outSet = set;
 	}
 
-	public void setGenSet(HashSet<String> set) {
+	public void setGenSet(Set<String> set) {
  		this.genSet = set;
 	}
 
-	public void setKillSet(HashSet<String> set) {
+	public void setKillSet(Set<String> set) {
  		this.killSet = set;
 	}
 
@@ -136,6 +137,45 @@ public class IRNode {
 			System.out.println(";" + opCode + operand1 + operand2 + result);
 		}
 		
+	}
+
+	public void showNode_Liveness(Set<String> LiveVar){
+		if(opCode == "NEWLINE"){
+			System.out.println("");
+			return;
+		}
+		if(opCode == "VAR" || opCode == "STRING" || opCode == "EOGD"){
+			return;
+		}
+		if((opCode == "PUSH" || opCode == "POP") && (operand1 == null) && (operand2 == null) && (result == null)){
+			System.out.print(";" + opCode + " ");
+			System.out.print("\t");
+			System.out.print("live vars: ");
+			for(String var : LiveVar){
+				System.out.print(var+", ");
+			}
+			System.out.print("\n");
+			return;
+		}
+		String part_first = "";
+		String part_second = "";
+		String part_dest = "";
+		if (operand1 != null){
+			part_first = " " + operand1;
+		}
+		if (operand2 != null){
+			part_second = " " + operand2;
+		}
+		if (result != null){
+			part_dest = " " + result;
+		}
+		System.out.print(";" + opCode + part_first + part_second + part_dest);
+		System.out.print("\t");
+		System.out.print("live vars: ");
+		for(String var : LiveVar){
+			System.out.print(var+", ");
+		}
+		System.out.print("\n");
 	}
 
 }
