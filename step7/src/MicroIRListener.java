@@ -24,6 +24,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private HashMap<String, Function> functionMap = new HashMap<String, Function>();//All functions
 	private HashSet<String>global = new HashSet<String>();
 	private ArrayList<String> opList = new ArrayList<String>();
+	private ArrayList<IRNode> leaderList = new ArrayList<IRNode>();
 	private Stack<LabelNode> labelStack = new Stack<LabelNode>();
 	private HashSet<String> currOutSet = new HashSet<String>();
 	private String[] register4R = new String[4];
@@ -196,6 +197,7 @@ public class MicroIRListener extends MicroBaseListener{
 			ArrayList<IRNode> predList = irnode.getPredecessor();
 			if(predList.size() == 0) {
 				irnode.setLeader();
+				leaderList.add(irnode);
 			} else {
 				for(IRNode predecessor : predList) {
 					switch(predecessor.getOpCode()) {
@@ -207,6 +209,7 @@ public class MicroIRListener extends MicroBaseListener{
 						case "GE":
 						case "GT":
 						irnode.setLeader();
+						leaderList.add(irnode);
 						break;
 					}
 				}
@@ -214,6 +217,109 @@ public class MicroIRListener extends MicroBaseListener{
 		}
 
 	}
+
+	private int ensure(String input, int idx){
+		String printResult = ";ensure(): " + input;
+		for (int i = 3; i >= 0; i--) {
+			if(input.equals(register4R[i])) {
+				printResult += " has register " + "r" + Integer.toString(i);
+				System.out.println(printResult);
+				updateReg4R();
+				return i;
+			}
+		}
+
+		int regIndex = allocate(input, idx);
+		printResult = ";ensure(): " + input + " gets register " + "r" + Integer.toString(regIndex);
+		System.out.println(printResult);
+		updateReg4R();
+
+		if(!input.contains("$T")) {
+			System.out.println(";loading " + input + "to register " + Integer.toString(regIndex));
+			System.out.println("move " + moveReg(input) + " " + Integer.toString(regIndex));
+		}
+
+		return regIndex;
+
+	}
+
+	private void free(int i) {
+		System.out.println(";Freeing unused variable " +register4R[i]);
+		if(dirty4R[i]) {
+			System.out.println(";Spilling variable: " + register4R[i]);
+			String mem = moveReg(register4R[i]);
+			System.out.println("move r" + Integer.toString(i) + " " + mem);
+		}
+		register4R[i] = null;
+		dirty4R[i] = false;
+	}
+	private int allocate(String input, int idx) {
+		for(int i = 3; i >= 0; i--) {
+			if(register4R[i] == null) {
+				register4R[i] = input;
+				return i;
+			}
+		}
+
+		IRNode irnode = IRList.get(idx-1);
+		int regIndex = 3;
+		for(int i = 0; i < 4; i++) {
+			String reg = register4R[i];
+			if(irnode.getOperand1() != null && irnode.getOperand1().equals(reg)) {
+				continue;
+			} else if(irnode.getOperand2() != null && irnode.getOperand2().equals(reg)) {
+				continue;
+			} else if(irnode.getResult() != null && irnode.getResult().equals(reg)) {
+				continue;
+			} else {
+				regIndex = i;
+			}
+		}
+
+		System.out.println(";allocate() has to spill" + register4R[regIndex]);
+		free(regIndex);
+		register4R[regIndex] = input;
+		
+		return regIndex;
+	}
+
+	private void spill() {
+		System.out.println(";Spilling registers at the end of the Basic Block");
+		for (int i = 3; i >= 0; i--) {
+			if (register4R[1] != null) {
+				System.out.println(";Spilling variable: " + register4R[i]);
+				String mem = moveReg(register4R[i]);
+				System.out.println("move r" + Integer.toString(i) + " " + mem);
+				register4R[i] = null;
+				dirty4R[i] = false;
+			}
+		}
+	}
+
+	private void updateReg4R() {
+		String printResult ="{";
+		for (int i = 0; i < 4;i++) {
+			printResult += " r" + Integer.toString(i) + "->";
+			if (register4R[i] == null) {
+				printResult += "null";
+			} else {
+				printResult += register4R[i];
+			}
+		}
+
+		printResult += " }";
+		System.out.println(printResult);
+	}
+
+	private String moveReg(String input) {
+		if (input == null) {
+			return null;
+		}
+
+		//TODO incomplete
+	}
+
+
 
 	private void addopList() {
 		opList.add("ADDI");
