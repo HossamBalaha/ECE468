@@ -223,6 +223,9 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 	private void createLeader() {
+		for (int i = 0; i <IRList.size();i++) {
+			leaderList.add(0);
+		}
 		for(int i = 0; i<IRList.size();i++) {
 			IRNode irnode = IRList.get(i);
 			Set<String> inSet = new HashSet<String>();
@@ -232,7 +235,7 @@ public class MicroIRListener extends MicroBaseListener{
 			ArrayList<IRNode> predList = irnode.getPredecessor();
 			if(predList.size() == 0) {
 				irnode.setLeader();
-				leaderList.add(i);
+				leaderList.set(i, 1);
 			} else {
 				for(IRNode predecessor : predList) {
 					switch(predecessor.getOpCode()) {
@@ -244,7 +247,7 @@ public class MicroIRListener extends MicroBaseListener{
 						case "GE":
 						case "GT":
 						irnode.setLeader();
-						leaderList.add(i);
+						leaderList.set(i, 1);
 						break;
 					}
 				}
