@@ -110,7 +110,7 @@ public class MicroIRListener extends MicroBaseListener{
 					irnode.addGenSet(str);
 				}
 			} else if(opCode.equals("STOREI") || opCode.equals("STOREF")) {
-				if(!(operand1.matches("[0-9]+") || operand1.matches("[0-9]*\\.[0-9]+")) && operand1 != null){
+				if(operand1 != null && !(functionTypeMap.get(currLabel).get(operand1).equals("INT") || functionTypeMap.get(currLabel).get(operand1).equals("FLOAT"))){
 					irnode.addGenSet(operand1);
 				}
 				if(result != null) {
@@ -240,18 +240,22 @@ public class MicroIRListener extends MicroBaseListener{
 			}
 			if(opCode.equals("LINK")) {
 				TNList.add(new TinyNode(getOp(opCode), null, "" + localNum));
-			} else if(opCode.equals("LABEL") || opCode.equals("JUMP")) {
+				continue;
+			}  
+			if(opCode.equals("LABEL") || opCode.equals("JUMP")) {
 				if (functionMap.containsKey(result)){
 					currLabel = result;
 					localNum = functionMap.get(currLabel).getLocalVar().size();
 					paraNum = functionMap.get(currLabel).getParamVar().size();
 				}
 				TNList.add(new TinyNode(getOp(opCode), null, result));
-			} else if(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
+				continue;
+			} 
+			if(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
 				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ")) {
-				int reg1 = ensure(operand1);
+				int reg1 = ensure(operand1, index);
 				String r1 = "r" + Integer.toString(reg1);
-				int reg2 = ensure(operand2);
+				int reg2 = ensure(operand2, index);
 				String r2 = "r" + Integer.toString(reg2);
 				String type = functionTypeMap.get(currLabel).get(operand1);
 				if(type.equals("INT")) {
@@ -265,9 +269,108 @@ public class MicroIRListener extends MicroBaseListener{
 				if(!currOutSet.contains(register4R[reg2])) {
 					free(reg2);
 				}
+			} 
+			if(!(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
+				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ") || opCode.equals("JUMP"))) {
+			} else if(index < leaderList.size() && leaderList.get(index) && !opCode.equals("RET")) {
+				spill();
 			}
-			
-
+			if(opCode.equals("JSR")) {
+				TNList.add(new TinyNode("push", null, "r0"));
+				TNList.add(new TinyNode("push", null, "r1"));
+				TNList.add(new TinyNode("push", null, "r2"));
+				TNList.add(new TinyNode("push", null, "r3"));
+				TNList.add(new TinyNode("jsr", null, result));
+				TNList.add(new TinyNode("pop", null, "r3"));
+				TNList.add(new TinyNode("pop", null, "r2"));
+				TNList.add(new TinyNode("pop", null, "r1"));
+				TNList.add(new TinyNode("pop", null, "r0"));
+			} else if(opCode.equals("PUSH")) {
+				if(result == null){
+					TNList.add(new TinyNode(getOp(opCode), null, null));
+				} else {
+					int reg1 = ensure(result, index);
+					String r1 = "r" + Integer.toString(reg1);
+					TNList.add(new TinyNode(getOp(opCode), null, r1));
+					if(!currOutSet.contains(register4R[reg1])) {
+						free(reg1);
+					}
+				}
+			} else if(opCode.equals("POP")) {
+				if(result == null){
+					TNList.add(new TinyNode(getOp(opCode), null, null));
+				} else {
+					int reg1 = ensure(result, index);
+					String r1 = "r" + Integer.toString(reg1);
+					dirty4R[reg1] = true;
+					TNList.add(new TinyNode(getOp(opCode), null, r1));
+					if(!currOutSet.contains(register4R[reg1])) {
+						free(reg1);
+					}
+				}
+			} else if(opCode.equals("RET")) {
+				spill();
+				TNList.add(new TinyNode("unlnk", null, null));
+				TNList.add(new TinyNode("ret", null, null));
+			} else if(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
+				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ")) {
+				TNList.add(new TinyNode(getOp(opCode), null, result));
+			} else if(opCode.equals("READI") || opCode.equals("READF") || opCode.equals("WRITEI") || opCode.equals("WRITEF")) {
+				int reg1 = ensure(result, index);
+				String r1 = "r" + Integer.toString(reg1);
+				dirty4R[reg1] = true;
+				TNList.add(new TinyNode("sys", getOp(opCode), result));
+				if(!currOutSet.contains(register4R[reg1])) {
+					free(reg1);
+				}
+			} else if(opCode.equals("WRITES")) {
+				TNList.add(new TinyNode("sys", getOp(opCode), result));
+			} else if(opCode.equals("STOREI") || opCode.equals("STOREF")) {
+				if(functionTypeMap.get(currLabel).get(operand1).equals("INT") || functionTypeMap.get(currLabel).get(operand1).equals("FLOAT")) {
+					int reg1 = ensure(result, index);
+					String r1 = "r" + Integer.toString(reg1);
+					dirty4R[reg1] = true;
+					TNList.add(new TinyNode("move", operand1, r1));
+					if(!currOutSet.contains(register4R[reg1])) {
+						free(reg1);
+					}
+				} else{
+					if(!result.equals("$R")) {
+						int reg1 = ensure(operand1, index);
+						String r1 = "r" + Integer.toString(reg1);
+						int reg2 = ensure(result, index);
+						String r2 = "r" + Integer.toString(reg2);
+						dirty4R[reg2] = true;
+						TNList.add(new TinyNode("move", r1, r2));
+						if(!currOutSet.contains(register4R[reg1])) {
+							free(reg1);
+						}
+						if(!currOutSet.contains(register4R[reg2])) {
+							free(reg2);
+						} 
+					} else {
+						int reg1 = ensure(operand1, index);
+						String r1 = "r" + Integer.toString(reg1);
+						String r2 = getTinyReg(result);
+						TNList.add(new TinyNode("move", r1, r2));
+						if(!currOutSet.contains(register4R[reg1])) {
+							free(reg1);
+						}
+					}
+				} else if(opCode.equals("ADDI") || opCode.equals("ADDF") 
+					|| opCode.equals("SUBI") || opCode.equals("SUBF")
+					|| opCode.equals("MULTI") || opCode.equals("MULTF")
+					|| opCode.equals("DIVI") || opCode.equals("DIVF")) {
+					int reg1 = ensure(operand1, index);
+					String r1 = "r" + Integer.toString(reg1);
+					int reg2 = ensure(operand2, index);
+					String r2 = "r" + Integer.toString(reg2);
+					boolean isdead1 = currOutSet.contains(operand1);
+					boolean isdead2 = currOutSet.contains(operand2);
+					System.out.println(";Spilling variable: " + operand1);
+					
+				}
+			}
 		}
 	}
 
