@@ -385,12 +385,12 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 	private void createRegAllocation() {
-		for(index = 0; index < IRList.size(); index++) {
-			IRNode irnode = IRList.get(index);
+		for(IRNode irnode : IRList) {
 			String opCode = irnode.getOpCode();
 			String operand1 = irnode.getOperand1();
 			String operand2 = irnode.getOperand2();
 			String result = irnode.getResult();
+			index++;
 			currOutSet = irnode.getOutSet();
 			irnode.showNode_Liveness(currOutSet);
 			if(opCode == null) {
@@ -409,7 +409,6 @@ public class MicroIRListener extends MicroBaseListener{
 				int reg2 = ensure(operand2, index);
 				String r2 = "r" + Integer.toString(reg2);
 				String type = functionTypeMap.get(currLabel).get(operand2);
-				System.out.println(type + "!!!");
 				if(type.equals("INT")) {
 					TinyNode tn = new TinyNode("cmpi", r1, r2);
 					tn.printNode();
@@ -561,7 +560,6 @@ public class MicroIRListener extends MicroBaseListener{
 					|| opCode.equals("SUBI") || opCode.equals("SUBF")
 					|| opCode.equals("MULTI") || opCode.equals("MULTF")
 					|| opCode.equals("DIVI") || opCode.equals("DIVF")) {
-				System.out.println("ADDDDD!!!!!!!!!!");
 				int reg1 = ensure(operand1, index);
 				String r1 = "r" + Integer.toString(reg1);
 				int reg2 = ensure(operand2, index);
@@ -642,7 +640,6 @@ public class MicroIRListener extends MicroBaseListener{
 
 			} else if(!(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
 				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ") || opCode.equals("JUMP"))) {
-				System.out.println("!!!!" + irnode.getOpCode() + " " + irnode.getResult() + " " + leaderList.get(index));
 				if(leaderList.get(index) == 1 && !opCode.equals("RET")) {
 					spill();
 				}
