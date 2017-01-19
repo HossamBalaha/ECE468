@@ -334,7 +334,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private void spill() {
 		System.out.println(";Spilling registers at the end of the Basic Block");
 		for (int i = 3; i >= 0; i--) {
-			if (register4R[1] != null) {
+			if (register4R[i] != null) {
 				System.out.println(";Spilling variable: " + register4R[i]);
 				String mem = calTinyReg(register4R[i]);
 				//System.out.println("move r" + Integer.toString(i) + " " + mem);
@@ -402,17 +402,6 @@ public class MicroIRListener extends MicroBaseListener{
 				TNList.add(new TinyNode(getOp(opCode), null, "" + localNum + tinyCount));
 				continue;
 			}  
-			if(opCode.equals("LABEL") || opCode.equals("JUMP")) {
-				if (functionMap.containsKey(result)){
-					currLabel = result;
-					localNum = functionMap.get(currLabel).getLocalVar().size();
-					paraNum = functionMap.get(currLabel).getParamVar().size();
-				}
-				TinyNode tn = new TinyNode(getOp(opCode), null, result);
-				tn.printNode();
-				TNList.add(new TinyNode(getOp(opCode), null, result));
-				continue;
-			} 
 			if(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
 				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ")) {
 				int reg1 = ensure(operand1, index);
@@ -420,6 +409,7 @@ public class MicroIRListener extends MicroBaseListener{
 				int reg2 = ensure(operand2, index);
 				String r2 = "r" + Integer.toString(reg2);
 				String type = functionTypeMap.get(currLabel).get(operand2);
+				System.out.println(type + "!!!");
 				if(type.equals("INT")) {
 					TinyNode tn = new TinyNode("cmpi", r1, r2);
 					tn.printNode();
@@ -435,7 +425,7 @@ public class MicroIRListener extends MicroBaseListener{
 				if(!currOutSet.contains(register4R[reg2])) {
 					free(reg2);
 				}
-			} 
+			}
 			if(index >= leaderList.size()){
 
 			} else if(!(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
@@ -472,38 +462,36 @@ public class MicroIRListener extends MicroBaseListener{
 				TNList.add(new TinyNode("pop", null, "r2"));
 				TNList.add(new TinyNode("pop", null, "r1"));
 				TNList.add(new TinyNode("pop", null, "r0"));
-			} else if(opCode.equals("PUSH")) {
+				continue;
+			} 
+			if(opCode.equals("LABEL")) {
+				if (functionMap.containsKey(result)){
+					currLabel = result;
+					localNum = functionMap.get(currLabel).getLocalVar().size();
+					paraNum = functionMap.get(currLabel).getParamVar().size();
+				}
+				TinyNode tn = new TinyNode(getOp(opCode), null, result);
+				tn.printNode();
+				TNList.add(new TinyNode(getOp(opCode), null, result));
+				continue;
+			} 
+			if(opCode.equals("PUSH")) {
 				if(result == null){
 					TinyNode tn = new TinyNode(getOp(opCode), null, null);
 					tn.printNode();
 					TNList.add(new TinyNode(getOp(opCode), null, null));
-				} else {
-					int reg1 = ensure(result, index);
-					String r1 = "r" + Integer.toString(reg1);
-					TinyNode tn = new TinyNode(getOp(opCode), null, r1);
-					tn.printNode();
-					TNList.add(new TinyNode(getOp(opCode), null, r1));
-					if(!currOutSet.contains(register4R[reg1])) {
-						free(reg1);
-					}
+					continue;
 				}
-			} else if(opCode.equals("POP")) {
+			}
+			if(opCode.equals("POP")) {
 				if(result == null){
 					TinyNode tn = new TinyNode(getOp(opCode), null, null);
 					tn.printNode();
 					TNList.add(new TinyNode(getOp(opCode), null, null));
-				} else {
-					int reg1 = ensure(result, index);
-					String r1 = "r" + Integer.toString(reg1);
-					dirty4R[reg1] = true;
-					TinyNode tn = new TinyNode(getOp(opCode), null, r1);
-					tn.printNode();
-					TNList.add(new TinyNode(getOp(opCode), null, r1));
-					if(!currOutSet.contains(register4R[reg1])) {
-						free(reg1);
-					}
+					continue;
 				}
-			} else if(opCode.equals("RET")) {
+			}  
+			if(opCode.equals("RET")) {
 				spill();
 				TinyNode tn = new TinyNode("unlnk", null, null);
 				tn.printNode();
@@ -573,6 +561,7 @@ public class MicroIRListener extends MicroBaseListener{
 					|| opCode.equals("SUBI") || opCode.equals("SUBF")
 					|| opCode.equals("MULTI") || opCode.equals("MULTF")
 					|| opCode.equals("DIVI") || opCode.equals("DIVF")) {
+				System.out.println("ADDDDD!!!!!!!!!!");
 				int reg1 = ensure(operand1, index);
 				String r1 = "r" + Integer.toString(reg1);
 				int reg2 = ensure(operand2, index);
@@ -606,14 +595,57 @@ public class MicroIRListener extends MicroBaseListener{
 				if(!currOutSet.contains(register4R[reg2])) {
 					free(reg2);
 				} 
+			} else if(opCode.equals("JUMP")) {
+				if (functionMap.containsKey(result)){
+					currLabel = result;
+					localNum = functionMap.get(currLabel).getLocalVar().size();
+					paraNum = functionMap.get(currLabel).getParamVar().size();
+				}
+				TinyNode tn = new TinyNode(getOp(opCode), null, result);
+				tn.printNode();
+				TNList.add(new TinyNode(getOp(opCode), null, result));
+				continue;
+			} else if(opCode.equals("PUSH")) {
+				if(result == null){
+					TinyNode tn = new TinyNode(getOp(opCode), null, null);
+					tn.printNode();
+					TNList.add(new TinyNode(getOp(opCode), null, null));
+				} else {
+					int reg1 = ensure(result, index);
+					String r1 = "r" + Integer.toString(reg1);
+					TinyNode tn = new TinyNode(getOp(opCode), null, r1);
+					tn.printNode();
+					TNList.add(new TinyNode(getOp(opCode), null, r1));
+					if(!currOutSet.contains(register4R[reg1])) {
+						free(reg1);
+					}
+				}
+			} else if(opCode.equals("POP")) {
+				if(result == null){
+					TinyNode tn = new TinyNode(getOp(opCode), null, null);
+					tn.printNode();
+					TNList.add(new TinyNode(getOp(opCode), null, null));
+				} else {
+					int reg1 = ensure(result, index);
+					String r1 = "r" + Integer.toString(reg1);
+					dirty4R[reg1] = true;
+					TinyNode tn = new TinyNode(getOp(opCode), null, r1);
+					tn.printNode();
+					TNList.add(new TinyNode(getOp(opCode), null, r1));
+					if(!currOutSet.contains(register4R[reg1])) {
+						free(reg1);
+					}
+				}
 			}
+
 			if(index >= leaderList.size()){
 
 			} else if(!(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
 				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ") || opCode.equals("JUMP"))) {
-
-			} else if(leaderList.get(index) == 1 && !opCode.equals("RET")) {
-				spill();
+				System.out.println("!!!!" + irnode.getOpCode() + " " + irnode.getResult() + " " + leaderList.get(index));
+				if(leaderList.get(index) == 1 && !opCode.equals("RET")) {
+					spill();
+				}
 			}
 		}
 	}
