@@ -271,9 +271,8 @@ public class MicroIRListener extends MicroBaseListener{
 		printResult = ";ensure(): " + input + " gets register " + "r" + Integer.toString(regIndex);
 		System.out.println(printResult);
 		updateReg4R();
-
 		if(!input.contains("$T") || usedList.contains(input)) {
-			System.out.println(";loading " + input + "to register " + Integer.toString(regIndex));
+			System.out.println(";loading " + input + " to register " + Integer.toString(regIndex));
 			//System.out.println("move r" + getTinyReg(input) + " " + Integer.toString(regIndex));
 			TinyNode tn = new TinyNode("move",  calTinyReg(input), "r" + Integer.toString(regIndex));
 			tn.printNode();
@@ -394,6 +393,7 @@ public class MicroIRListener extends MicroBaseListener{
 			currOutSet = irnode.getOutSet();
 			irnode.showNode_Liveness(currOutSet);
 			if(opCode == null) {
+				usedList.clear();
 				continue;
 			}
 			if(opCode.equals("LINK")) {
@@ -447,13 +447,13 @@ public class MicroIRListener extends MicroBaseListener{
 				tn.printNode();
 				 tn = new TinyNode("jsr", null, result);
 				tn.printNode();
-				 tn = new TinyNode("push", null, "r3");
+				 tn = new TinyNode("pop", null, "r3");
 				tn.printNode();
-				 tn = new TinyNode("push", null, "r2");
+				 tn = new TinyNode("pop", null, "r2");
 				tn.printNode();
-				 tn = new TinyNode("push", null, "r1");
+				 tn = new TinyNode("pop", null, "r1");
 				tn.printNode();
-				 tn = new TinyNode("push", null, "r0");
+				 tn = new TinyNode("pop", null, "r0");
 				tn.printNode();
 				TNList.add(new TinyNode("push", null, "r0"));
 				TNList.add(new TinyNode("push", null, "r1"));
