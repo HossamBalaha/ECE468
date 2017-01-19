@@ -409,6 +409,9 @@ public class MicroIRListener extends MicroBaseListener{
 				int reg2 = ensure(operand2, index);
 				String r2 = "r" + Integer.toString(reg2);
 				String type = functionTypeMap.get(currLabel).get(operand2);
+				if(type == null) {
+					type = functionTypeMap.get("global").get(operand2);
+				}
 				if(type.equals("INT")) {
 					TinyNode tn = new TinyNode("cmpi", r1, r2);
 					tn.printNode();
