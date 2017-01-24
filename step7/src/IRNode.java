@@ -139,43 +139,4 @@ public class IRNode {
 		
 	}
 
-	public void showNode_Liveness(Set<String> LiveVar){
-		if(opCode == "NEWLINE"){
-			System.out.println("");
-			return;
-		}
-		if(opCode == "VAR" || opCode == "STRING" || opCode == "EOGD"){
-			return;
-		}
-		if((opCode == "PUSH" || opCode == "POP") && (operand1 == null) && (operand2 == null) && (result == null)){
-			System.out.print(";" + opCode + " ");
-			System.out.print("\t");
-			System.out.print("live vars: ");
-			for(String var : LiveVar){
-				System.out.print(var+", ");
-			}
-			System.out.print("\n");
-			return;
-		}
-		String part_first = "";
-		String part_second = "";
-		String part_dest = "";
-		if (operand1 != null){
-			part_first = " " + operand1;
-		}
-		if (operand2 != null){
-			part_second = " " + operand2;
-		}
-		if (result != null){
-			part_dest = " " + result;
-		}
-		System.out.print(";" + opCode + part_first + part_second + part_dest);
-		System.out.print("\t");
-		System.out.print("live vars: ");
-		for(String var : LiveVar){
-			System.out.print(var+", ");
-		}
-		System.out.print("\n");
-	}
-
 }

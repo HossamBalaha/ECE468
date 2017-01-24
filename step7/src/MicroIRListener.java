@@ -38,7 +38,7 @@ public class MicroIRListener extends MicroBaseListener{
 	private int localNum = 0;
 	private int paraNum = 0;
 	private int pushflag = 0;
-	private int globalStringCount = 0;
+	private int globalVarCount = 0;
 	private int index = 0;
 	
 	//step7
@@ -103,14 +103,6 @@ public class MicroIRListener extends MicroBaseListener{
 				}
 			}
 		}
-
-		/*for (IRNode irnode : IRList) {
-			if(irnode.getOpCode().equals("VAR")) {
-				globalVar.add(irnode.getOperand1());
-			} else if(irnode.getOpCode().equals("STRING")) {
-				globalString.add(irnode.getOperand1());
-			} else {}
-		}*/
 	}
 
 	private void createGenKill() {
@@ -257,25 +249,14 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 	private int ensure(String input, int idx){
-		String printResult = ";ensure(): " + input;
 		for (int i = 3; i >= 0; i--) {
 			if(input.equals(register4R[i])) {
-				printResult += " has register " + "r" + Integer.toString(i);
-				System.out.println(printResult);
-				updateReg4R();
 				return i;
 			}
 		}
 
 		int regIndex = allocate(input, idx);
-		printResult = ";ensure(): " + input + " gets register " + "r" + Integer.toString(regIndex);
-		System.out.println(printResult);
-		updateReg4R();
 		if(!input.contains("$T") || usedList.contains(input)) {
-			System.out.println(";loading " + input + " to register " + Integer.toString(regIndex));
-			//System.out.println("move r" + getTinyReg(input) + " " + Integer.toString(regIndex));
-			TinyNode tn = new TinyNode("move",  calTinyReg(input), "r" + Integer.toString(regIndex));
-			tn.printNode();
 			TNList.add(new TinyNode("move",  calTinyReg(input), "r" + Integer.toString(regIndex)));
 		}
 		if(input.contains("$T") && !usedList.contains(input)) {
@@ -287,13 +268,8 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 	private void free(int i) {
-		System.out.println(";Freeing unused variable " +register4R[i]);
 		if(dirty4R[i]) {
-			System.out.println(";Spilling variable: " + register4R[i]);
 			String mem = calTinyReg(register4R[i]);
-			//System.out.println("move r" + Integer.toString(i) + " " + mem);
-			TinyNode tn = new TinyNode("move", "r" + Integer.toString(i), mem);
-			tn.printNode();
 			TNList.add(new TinyNode("move", "r" + Integer.toString(i), mem));
 
 		}
@@ -322,8 +298,6 @@ public class MicroIRListener extends MicroBaseListener{
 				regIndex = i;
 			}
 		}
-
-		System.out.println(";allocate() has to spill" + register4R[regIndex]);
 		free(regIndex);
 		register4R[regIndex] = input;
 		
@@ -331,45 +305,15 @@ public class MicroIRListener extends MicroBaseListener{
 	}
 
 	private void spill() {
-		System.out.println(";Spilling registers at the end of the Basic Block");
 		for (int i = 3; i >= 0; i--) {
 			if (register4R[i] != null) {
-				System.out.println(";Spilling variable: " + register4R[i]);
 				String mem = calTinyReg(register4R[i]);
-				//System.out.println("move r" + Integer.toString(i) + " " + mem);
-				TinyNode tn = new TinyNode("move", "r" + Integer.toString(i), mem);
-				tn.printNode();
 				TNList.add(new TinyNode("move", "r" + Integer.toString(i), mem));
 				register4R[i] = null;
 				dirty4R[i] = false;
 			}
 		}
 	}
-
-	private void updateReg4R() {
-		String printResult =";{";
-		for (int i = 0; i < 4;i++) {
-			printResult += " r" + Integer.toString(i) + "->";
-			if (register4R[i] == null) {
-				printResult += "null";
-			} else {
-				printResult += register4R[i];
-			}
-		}
-
-		printResult += " }";
-		System.out.println(printResult);
-	}
-
-	/*private String getTinyReg(String input) {
-		if (input == null) {
-			return null;
-		}
-
-		//TODO incomplete
-	}*/
-
-
 
 	private void addopList() {
 		opList.add("ADDI");
@@ -391,14 +335,11 @@ public class MicroIRListener extends MicroBaseListener{
 			String result = irnode.getResult();
 			index++;
 			currOutSet = irnode.getOutSet();
-			irnode.showNode_Liveness(currOutSet);
 			if(opCode == null) {
 				usedList.clear();
 				continue;
 			}
 			if(opCode.equals("LINK")) {
-				TinyNode tn = new TinyNode(getOp(opCode), null, "" + localNum + tinyCount);
-				tn.printNode();
 				TNList.add(new TinyNode(getOp(opCode), null, "" + localNum + tinyCount));
 				continue;
 			}  
@@ -413,12 +354,8 @@ public class MicroIRListener extends MicroBaseListener{
 					type = functionTypeMap.get("global").get(operand2);
 				}
 				if(type.equals("INT")) {
-					TinyNode tn = new TinyNode("cmpi", r1, r2);
-					tn.printNode();
 					TNList.add(new TinyNode("cmpi", r1, r2));
 				} else {
-					TinyNode tn = new TinyNode("cmpr", r1, r2);
-					tn.printNode();
 					TNList.add(new TinyNode("cmpr", r1, r2));
 				}
 				if(!currOutSet.contains(register4R[reg1])) {
@@ -437,24 +374,6 @@ public class MicroIRListener extends MicroBaseListener{
 				spill();
 			}
 			if(opCode.equals("JSR")) {
-				TinyNode tn = new TinyNode("push", null, "r0");
-				tn.printNode();
-				 tn = new TinyNode("push", null, "r1");
-				tn.printNode();
-				 tn = new TinyNode("push", null, "r2");
-				tn.printNode();
-				 tn = new TinyNode("push", null, "r3");
-				tn.printNode();
-				 tn = new TinyNode("jsr", null, result);
-				tn.printNode();
-				 tn = new TinyNode("pop", null, "r3");
-				tn.printNode();
-				 tn = new TinyNode("pop", null, "r2");
-				tn.printNode();
-				 tn = new TinyNode("pop", null, "r1");
-				tn.printNode();
-				 tn = new TinyNode("pop", null, "r0");
-				tn.printNode();
 				TNList.add(new TinyNode("push", null, "r0"));
 				TNList.add(new TinyNode("push", null, "r1"));
 				TNList.add(new TinyNode("push", null, "r2"));
@@ -472,61 +391,43 @@ public class MicroIRListener extends MicroBaseListener{
 					localNum = functionMap.get(currLabel).getLocalVar().size();
 					paraNum = functionMap.get(currLabel).getParamVar().size();
 				}
-				TinyNode tn = new TinyNode(getOp(opCode), null, result);
-				tn.printNode();
 				TNList.add(new TinyNode(getOp(opCode), null, result));
 				continue;
 			} 
 			if(opCode.equals("PUSH")) {
 				if(result == null){
-					TinyNode tn = new TinyNode(getOp(opCode), null, null);
-					tn.printNode();
 					TNList.add(new TinyNode(getOp(opCode), null, null));
 					continue;
 				}
 			}
 			if(opCode.equals("POP")) {
 				if(result == null){
-					TinyNode tn = new TinyNode(getOp(opCode), null, null);
-					tn.printNode();
 					TNList.add(new TinyNode(getOp(opCode), null, null));
 					continue;
 				}
 			}  
 			if(opCode.equals("RET")) {
 				spill();
-				TinyNode tn = new TinyNode("unlnk", null, null);
-				tn.printNode();
-				tn = new TinyNode("ret", null, null);
-				tn.printNode();
 				TNList.add(new TinyNode("unlnk", null, null));
 				TNList.add(new TinyNode("ret", null, null));
 			} else if(opCode.equals("LE") || opCode.equals("GE") || opCode.equals("NE")
 				|| opCode.equals("GT") || opCode.equals("LT") || opCode.equals("EQ")) {
-				TinyNode tn = new TinyNode(getOp(opCode), null, result);
-				tn.printNode();
 				TNList.add(new TinyNode(getOp(opCode), null, result));
 			} else if(opCode.equals("READI") || opCode.equals("READF") || opCode.equals("WRITEI") || opCode.equals("WRITEF")) {
 				int reg1 = ensure(result, index);
 				String r1 = "r" + Integer.toString(reg1);
 				dirty4R[reg1] = true;
-				TinyNode tn = new TinyNode("sys", getOp(opCode), r1);
-				tn.printNode();
 				TNList.add(new TinyNode("sys", getOp(opCode), r1));
 				if(!currOutSet.contains(register4R[reg1])) {
 					free(reg1);
 				}
 			} else if(opCode.equals("WRITES")) {
-				TinyNode tn = new TinyNode("sys", getOp(opCode), result);
-				tn.printNode();
 				TNList.add(new TinyNode("sys", getOp(opCode), result));
 			} else if(opCode.equals("STOREI") || opCode.equals("STOREF")) {
 				if(operand1.matches("[0-9]+") || operand1.matches("[0-9]*\\.[0-9]+")) {
 					int reg1 = ensure(result, index);
 					String r1 = "r" + Integer.toString(reg1);
 					dirty4R[reg1] = true;
-					TinyNode tn = new TinyNode("move", operand1, r1);
-					tn.printNode();
 					TNList.add(new TinyNode("move", operand1, r1));
 					if(!currOutSet.contains(register4R[reg1])) {
 						free(reg1);
@@ -538,8 +439,6 @@ public class MicroIRListener extends MicroBaseListener{
 						int reg2 = ensure(result, index);
 						String r2 = "r" + Integer.toString(reg2);
 						dirty4R[reg2] = true;
-						TinyNode tn = new TinyNode("move", r1, r2);
-						tn.printNode();
 						TNList.add(new TinyNode("move", r1, r2));
 						if(!currOutSet.contains(register4R[reg1])) {
 							free(reg1);
@@ -551,8 +450,6 @@ public class MicroIRListener extends MicroBaseListener{
 						int reg1 = ensure(operand1, index);
 						String r1 = "r" + Integer.toString(reg1);
 						String r2 = calTinyReg(result);
-						TinyNode tn = new TinyNode("move", r1, r2);
-						tn.printNode();
 						TNList.add(new TinyNode("move", r1, r2));
 						if(!currOutSet.contains(register4R[reg1])) {
 							free(reg1);
@@ -569,15 +466,8 @@ public class MicroIRListener extends MicroBaseListener{
 				String r2 = "r" + Integer.toString(reg2);
 				boolean isdead1 = currOutSet.contains(operand1);
 				boolean isdead2 = currOutSet.contains(operand2);
-				//System.out.println(";Switching owner of register " + r1 + " to " + result + " ");
-				updateReg4R();
 				if(dirty4R[reg1]) {
-					//System.out.println(";Spilling variable: " + operand1);
-					//System.out.println("move r" + Integer.toString(reg1) + " " + getTinyReg(operand1));
-					TinyNode tn = new TinyNode("move", "r" + Integer.toString(reg1), calTinyReg(operand1));
-					tn.printNode();
 					TNList.add(new TinyNode("move", "r" + Integer.toString(reg1), calTinyReg(operand1)));
-
 				}
 				if(result.contains("$T") && !usedList.contains(result)) {
 					usedList.add(result);
@@ -587,8 +477,6 @@ public class MicroIRListener extends MicroBaseListener{
 				r1 = "r" + Integer.toString(reg1);
 				r2 = "r" + Integer.toString(reg2);
 				dirty4R[reg1] = true;
-				TinyNode tn = new TinyNode(getOp(opCode), r2, r1);
-				tn.printNode();
 				TNList.add(new TinyNode(getOp(opCode), r2, r1));
 				if(!currOutSet.contains(register4R[reg1])) {
 					free(reg1);
@@ -602,20 +490,14 @@ public class MicroIRListener extends MicroBaseListener{
 					localNum = functionMap.get(currLabel).getLocalVar().size();
 					paraNum = functionMap.get(currLabel).getParamVar().size();
 				}
-				TinyNode tn = new TinyNode(getOp(opCode), null, result);
-				tn.printNode();
 				TNList.add(new TinyNode(getOp(opCode), null, result));
 				continue;
 			} else if(opCode.equals("PUSH")) {
 				if(result == null){
-					TinyNode tn = new TinyNode(getOp(opCode), null, null);
-					tn.printNode();
 					TNList.add(new TinyNode(getOp(opCode), null, null));
 				} else {
 					int reg1 = ensure(result, index);
 					String r1 = "r" + Integer.toString(reg1);
-					TinyNode tn = new TinyNode(getOp(opCode), null, r1);
-					tn.printNode();
 					TNList.add(new TinyNode(getOp(opCode), null, r1));
 					if(!currOutSet.contains(register4R[reg1])) {
 						free(reg1);
@@ -623,15 +505,11 @@ public class MicroIRListener extends MicroBaseListener{
 				}
 			} else if(opCode.equals("POP")) {
 				if(result == null){
-					TinyNode tn = new TinyNode(getOp(opCode), null, null);
-					tn.printNode();
 					TNList.add(new TinyNode(getOp(opCode), null, null));
 				} else {
 					int reg1 = ensure(result, index);
 					String r1 = "r" + Integer.toString(reg1);
 					dirty4R[reg1] = true;
-					TinyNode tn = new TinyNode(getOp(opCode), null, r1);
-					tn.printNode();
 					TNList.add(new TinyNode(getOp(opCode), null, r1));
 					if(!currOutSet.contains(register4R[reg1])) {
 						free(reg1);
@@ -986,8 +864,10 @@ public class MicroIRListener extends MicroBaseListener{
 			//convertIRtoTiny(IRList.get(i));
 		}
 		//TNList.add(new TinyNode("end", null, null));
+
+		convertIRtoTiny4R();
 		System.out.println(";tiny code");
-		for (int i = 0; i < globalStringCount; i++) {
+		for (int i = 0; i < globalVarCount; i++) {
 			TNList.get(i).printNode();
 		}
 		System.out.println("push");
@@ -997,13 +877,10 @@ public class MicroIRListener extends MicroBaseListener{
 		System.out.println("push r3");
 		System.out.println("jsr main");
 		System.out.println("sys halt");
-		convertIRtoTiny4R();
 		TNList.add(new TinyNode("end", null, null));
-		System.out.println("end");
-		for (int i = globalStringCount; i < TNList.size(); i++) {
-			//TNList.get(i).printNode();
+		for (int i = globalVarCount; i < TNList.size(); i++) {
+			TNList.get(i).printNode();
 		}
-
 		/*
 		Iterator<String> it = functionTypeMap.keySet().iterator();
 		while(it.hasNext()) {
@@ -1130,10 +1007,9 @@ public class MicroIRListener extends MicroBaseListener{
 		TinyNode tn;
 		for (int i = 0; i < idList.length; i++) {
 			if (currFunction == "global") {
-				tn = new TinyNode("var", idList[i], null);
-				tn.printNode();
 				TNList.add(new TinyNode("var", idList[i], null));
 				globalVar.add(idList[i]);
+				globalVarCount++;
 			}
 			functionTypeMap.get(currFunction).put(idList[i], type);
 			typeMap.put(idList[i], type);
@@ -1150,7 +1026,7 @@ public class MicroIRListener extends MicroBaseListener{
 		if (currFunction == "global") {
 			TNList.add(new TinyNode("str", name, value));
 			globalVar.add(name);
-			globalStringCount++;
+			globalVarCount++;
 		}
 	}
 
